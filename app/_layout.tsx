@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, LogBox } from 'react-native';
+import * as Linking from 'expo-linking';
 import * as Notifications from 'expo-notifications';
 
 LogBox.ignoreLogs([
@@ -37,6 +38,31 @@ export default function RootLayout() {
 
   useEffect(() => {
     requestNotificationPermission();
+
+    // OAuth 딥링크 핸들러 (Android: WebBrowser가 URL을 못 잡을 때 fallback)
+    async function handleOAuthUrl(url: string) {
+      if (!url) return;
+      try {
+        if (url.includes('code=')) {
+          await supabase.auth.exchangeCodeForSession(url);
+        } else if (url.includes('access_token=')) {
+          const fragment = url.split('#')[1] ?? '';
+          const params = Object.fromEntries(new URLSearchParams(fragment));
+          if (params.access_token) {
+            await supabase.auth.setSession({
+              access_token: params.access_token,
+              refresh_token: params.refresh_token,
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('OAuth deep link error:', e);
+      }
+    }
+    // 앱이 딥링크로 열렸을 때 (cold start)
+    Linking.getInitialURL().then((url) => { if (url) handleOAuthUrl(url); });
+    // 앱이 포그라운드에 있을 때 딥링크 수신
+    const linkingSub = Linking.addEventListener('url', ({ url }) => handleOAuthUrl(url));
 
     // 방법 1: 앱이 실행 중일 때 알림 탭 감지
     const notifSub = Notifications.addNotificationResponseReceivedListener((response) => {
@@ -86,6 +112,7 @@ export default function RootLayout() {
     return () => {
       notifSub.remove();
       subscription.unsubscribe();
+      linkingSub.remove();
     };
   }, []);
 
