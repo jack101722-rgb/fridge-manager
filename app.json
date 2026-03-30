@@ -19,7 +19,7 @@
     "android": {
       "package": "com.fridgedoctor.app",
       "adaptiveIcon": {
-        "backgroundColor": "#3182F6",
+        "backgroundColor": "#C8E6F5",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
