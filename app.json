@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "냉장고 매니저",
+    "name": "냉장고 박사",
     "slug": "fridge-manager",
     "version": "1.0.0",
-    "scheme": "fridgemanager",
+    "scheme": "fridgedoctor",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,16 +14,24 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.fridgemanager.app"
+      "bundleIdentifier": "com.fridgedoctor.app"
     },
     "android": {
-      "package": "com.fridgemanager.app",
+      "package": "com.fridgedoctor.app",
       "adaptiveIcon": {
         "backgroundColor": "#3182F6",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "fridgemanager" }, { "scheme": "fridgedoctor" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.CAMERA",
