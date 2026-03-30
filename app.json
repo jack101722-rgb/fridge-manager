@@ -1,8 +1,9 @@
 {
   "expo": {
-    "name": "fridge-manager",
+    "name": "냉장고 매니저",
     "slug": "fridge-manager",
     "version": "1.0.0",
+    "scheme": "fridgemanager",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -12,19 +13,65 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.fridgemanager.app"
     },
     "android": {
+      "package": "com.fridgemanager.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#3182F6",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-camera",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "냉장고 사진을 선택하기 위해 사진 라이브러리 접근이 필요해요.",
+          "cameraPermission": "냉장고 속 재료를 AI로 인식하기 위해 카메라가 필요해요."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "처리된 스크린샷을 삭제하기 위해 사진 라이브러리 접근이 필요해요."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#3182F6"
+        }
+      ],
+      "expo-web-browser"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "79bc39eb-83b5-4f88-9a45-d2fc920302eb"
+      }
     }
   }
 }
