@@ -23,7 +23,6 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const redirectTo = Linking.createURL('/');
-      console.log('[OAuth] redirectTo:', redirectTo);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: { redirectTo, skipBrowserRedirect: true },
@@ -32,33 +31,53 @@ export default function LoginScreen() {
       if (!data.url) throw new Error('OAuth URL을 받지 못했어요.');
 
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-      if (result.type === 'success' && result.url) {
-        // fragment(#) 방식으로 토큰이 오는 경우 처리
-        const url = result.url;
-        const hasCode = url.includes('code=');
-        const hasToken = url.includes('access_token=');
 
-        if (hasCode) {
-          const { error: sessionError } = await supabase.auth.exchangeCodeForSession(url);
-          if (sessionError) throw sessionError;
-        } else if (hasToken) {
-          const fragment = url.split('#')[1] ?? '';
-          const params = Object.fromEntries(new URLSearchParams(fragment));
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: params.access_token,
-            refresh_token: params.refresh_token,
-          });
-          if (sessionError) throw sessionError;
-        } else {
-          throw new Error('로그인 응답에서 인증 정보를 찾을 수 없어요.');
+      if (result.type === 'success' && result.url) {
+        // WebBrowser가 URL을 직접 캡처한 경우 (iOS 또는 일부 Android)
+        await processOAuthUrl(result.url);
+      } else {
+        // Android에서 흔히 발생: WebBrowser가 'dismiss'를 반환하지만
+        // _layout.tsx의 Linking 리스너가 딥링크를 처리함
+        // 세션이 설정될 때까지 최대 6초 대기
+        const session = await waitForSession(6000);
+        if (!session) {
+          throw new Error('로그인에 실패했어요. 다시 시도해주세요.');
         }
-        // 네비게이션은 _layout의 onAuthStateChange(SIGNED_IN)에서 처리
+        router.replace('/');
       }
     } catch (err: any) {
       Alert.alert('오류', err.message ?? '로그인에 실패했어요. 다시 시도해주세요.');
     } finally {
       setLoading(false);
     }
+  }
+
+  async function processOAuthUrl(url: string) {
+    if (url.includes('code=')) {
+      const { error } = await supabase.auth.exchangeCodeForSession(url);
+      if (error) throw error;
+    } else if (url.includes('access_token=')) {
+      const fragment = url.split('#')[1] ?? '';
+      const params = Object.fromEntries(new URLSearchParams(fragment));
+      const { error } = await supabase.auth.setSession({
+        access_token: params.access_token,
+        refresh_token: params.refresh_token,
+      });
+      if (error) throw error;
+    } else {
+      throw new Error('로그인 응답에서 인증 정보를 찾을 수 없어요.');
+    }
+    router.replace('/');
+  }
+
+  async function waitForSession(maxWaitMs: number): Promise<boolean> {
+    const start = Date.now();
+    while (Date.now() - start < maxWaitMs) {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) return true;
+    }
+    return false;
   }
 
   async function handleEmailAuth() {

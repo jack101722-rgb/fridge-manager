@@ -43,17 +43,24 @@ export default function RootLayout() {
     async function handleOAuthUrl(url: string) {
       if (!url) return;
       try {
+        let success = false;
         if (url.includes('code=')) {
-          await supabase.auth.exchangeCodeForSession(url);
+          const { error } = await supabase.auth.exchangeCodeForSession(url);
+          if (!error) success = true;
         } else if (url.includes('access_token=')) {
           const fragment = url.split('#')[1] ?? '';
           const params = Object.fromEntries(new URLSearchParams(fragment));
           if (params.access_token) {
-            await supabase.auth.setSession({
+            const { error } = await supabase.auth.setSession({
               access_token: params.access_token,
               refresh_token: params.refresh_token,
             });
+            if (!error) success = true;
           }
+        }
+        // 세션 설정 성공 시 명시적 네비게이션 (onAuthStateChange가 늦게 올 경우 대비)
+        if (success) {
+          router.replace('/');
         }
       } catch (e) {
         console.warn('OAuth deep link error:', e);
