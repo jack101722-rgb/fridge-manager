@@ -1,10 +1,14 @@
-import { useEffect } from 'react';
 import { Redirect } from 'expo-router';
 import { useFridgeStore } from '../store/fridgeStore';
 
-// 앱 시작점 — 로그인 여부에 따라 화면 이동
+// 앱 시작점 — 서비스 소개 → 로그인 → 온보딩 → 메인
 export default function Index() {
   const user = useFridgeStore((s) => s.user);
+  const hasSeenWelcome = useFridgeStore((s) => s.hasSeenWelcome);
+
+  if (!hasSeenWelcome) {
+    return <Redirect href="/welcome" />;
+  }
 
   if (!user) {
     return <Redirect href="/login" />;

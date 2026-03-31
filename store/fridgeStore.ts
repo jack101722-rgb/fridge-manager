@@ -29,6 +29,10 @@ interface FridgeStore {
   pendingIngredientId: string | null;
   setPendingIngredientId: (id: string | null) => void;
 
+  // 서비스 소개 온보딩 (로그인 전)
+  hasSeenWelcome: boolean;
+  setHasSeenWelcome: (seen: boolean) => void;
+
   // 로딩 상태
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
@@ -79,6 +83,9 @@ export const useFridgeStore = create<FridgeStore>((set) => ({
 
   pendingIngredientId: null,
   setPendingIngredientId: (id) => set({ pendingIngredientId: id }),
+
+  hasSeenWelcome: false,
+  setHasSeenWelcome: (hasSeenWelcome) => set({ hasSeenWelcome }),
 
   isLoading: false,
   setIsLoading: (isLoading) => set({ isLoading }),

@@ -8,6 +8,7 @@ import * as Notifications from 'expo-notifications';
 LogBox.ignoreLogs([
   'expo-notifications: Android Push notifications (remote notifications)',
 ]);
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { useFridgeStore } from '../store/fridgeStore';
 import { Ingredient, User } from '../types';
@@ -20,6 +21,7 @@ export default function RootLayout() {
   const setFridge = useFridgeStore((s) => s.setFridge);
   const setIngredients = useFridgeStore((s) => s.setIngredients);
   const setIsLoading = useFridgeStore((s) => s.setIsLoading);
+  const setHasSeenWelcome = useFridgeStore((s) => s.setHasSeenWelcome);
   const ingredients = useFridgeStore((s) => s.ingredients);
   const pendingIngredientId = useFridgeStore((s) => s.pendingIngredientId);
   const setPendingIngredientId = useFridgeStore((s) => s.setPendingIngredientId);
@@ -85,6 +87,8 @@ export default function RootLayout() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       clearTimeout(sessionTimeout);
       try {
+        const seen = await AsyncStorage.getItem('hasSeenWelcome');
+        if (seen === 'true') setHasSeenWelcome(true);
         if (session?.user) {
           await loadUserProfile(session.user.id, session.user.email!);
         }
@@ -200,6 +204,7 @@ export default function RootLayout() {
       <StatusBar style="dark" backgroundColor="transparent" translucent />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
+        <Stack.Screen name="welcome" />
         <Stack.Screen name="login" />
         <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="(tabs)" />
