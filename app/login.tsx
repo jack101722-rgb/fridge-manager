@@ -34,19 +34,17 @@ export default function LoginScreen() {
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
 
       if (result.type === 'success' && result.url) {
-        // WebBrowser가 URL을 직접 캡처한 경우 (iOS 또는 일부 Android)
-        await processOAuthUrl(result.url);
-      } else {
-        // Android에서 흔히 발생: WebBrowser가 'dismiss'를 반환하지만
-        // _layout.tsx의 Linking 리스너가 딥링크를 처리하고
-        // onAuthStateChange가 loadUserProfile 완료 후 자동으로 이동함
-        // user가 store에 세팅될 때까지 최대 8초 대기
-        const loggedIn = await waitForUser(8000);
-        if (!loggedIn) {
-          throw new Error('로그인에 실패했어요. 다시 시도해주세요.');
-        }
-        router.replace('/');
+        // WebBrowser가 URL을 직접 캡처한 경우 — 세션 교환만 하고 네비게이션은 아래에서
+        // _layout.tsx가 먼저 처리했을 수도 있으니 에러는 무시
+        try {
+          await exchangeOAuthUrl(result.url);
+        } catch (_) {}
       }
+      // 'success'든 'dismiss'든 공통:
+      // onAuthStateChange → loadUserProfile → setUser 완료까지 대기 후 이동
+      const loggedIn = await waitForUser(8000);
+      if (!loggedIn) throw new Error('로그인에 실패했어요. 다시 시도해주세요.');
+      router.replace('/');
     } catch (err: any) {
       Alert.alert('오류', err.message ?? '로그인에 실패했어요. 다시 시도해주세요.');
     } finally {
@@ -54,7 +52,7 @@ export default function LoginScreen() {
     }
   }
 
-  async function processOAuthUrl(url: string) {
+  async function exchangeOAuthUrl(url: string) {
     if (url.includes('code=')) {
       const { error } = await supabase.auth.exchangeCodeForSession(url);
       if (error) throw error;
@@ -66,17 +64,13 @@ export default function LoginScreen() {
         refresh_token: params.refresh_token,
       });
       if (error) throw error;
-    } else {
-      throw new Error('로그인 응답에서 인증 정보를 찾을 수 없어요.');
     }
-    router.replace('/');
   }
 
   async function waitForUser(maxWaitMs: number): Promise<boolean> {
     const start = Date.now();
     while (Date.now() - start < maxWaitMs) {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      // user가 store에 세팅되면 loadUserProfile까지 완료된 것
       const user = useFridgeStore.getState().user;
       if (user) return true;
     }
