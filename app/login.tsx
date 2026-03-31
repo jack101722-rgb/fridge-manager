@@ -2,15 +2,16 @@ import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, SafeAreaView, KeyboardAvoidingView,
-  Platform, ActivityIndicator, Alert, Image, AppState
+  Platform, ActivityIndicator, Alert, Image
 } from 'react-native';
 import { router } from 'expo-router';
-import * as Linking from 'expo-linking';
-import * as WebBrowser from 'expo-web-browser';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { supabase } from '../lib/supabase';
-import { useFridgeStore } from '../store/fridgeStore';
 
-WebBrowser.maybeCompleteAuthSession();
+GoogleSignin.configure({
+  webClientId: '278313269161-pmi3vovdlt6v6kgoq0n29v07gvr753t9.apps.googleusercontent.com',
+  scopes: ['email', 'profile'],
+});
 
 type Mode = 'login' | 'signup';
 
@@ -20,103 +21,33 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function handleOAuth(provider: 'google' | 'kakao') {
+  async function handleGoogleSignIn() {
     setLoading(true);
     try {
-      const redirectTo = Linking.createURL('/');
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo, skipBrowserRedirect: true },
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+
+      const idToken = response.data?.idToken;
+      if (!idToken) throw new Error('Google 로그인 토큰을 받지 못했어요.');
+
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
       });
       if (error) throw error;
-      if (!data.url) throw new Error('OAuth URL을 받지 못했어요.');
 
-      if (Platform.OS === 'android') {
-        // Android: 시스템 브라우저로 열기
-        await Linking.openURL(data.url);
-        // 앱이 포그라운드로 돌아올 때까지 대기
-        await waitForAppActive();
-        // AsyncStorage 기반으로 세션 폴링 (다른 인스턴스에서 설정된 세션도 감지)
-        const session = await waitForSession(15000);
-        if (!session) throw new Error('로그인에 실패했어요. 다시 시도해주세요.');
-        // 세션 확인됨 → 유저 프로필 직접 로드 후 이동
-        await loadAndSetUser(session.user.id, session.user.email!);
-        router.replace('/');
-      } else {
-        // iOS: openAuthSessionAsync가 안정적으로 동작
-        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-        if (result.type === 'success' && result.url) {
-          try { await exchangeOAuthUrl(result.url); } catch (_) {}
-        }
-        const loggedIn = await waitForUser(8000);
-        if (!loggedIn) throw new Error('로그인에 실패했어요. 다시 시도해주세요.');
-        router.replace('/');
-      }
+      router.replace('/');
     } catch (err: any) {
-      Alert.alert('오류', err.message ?? '로그인에 실패했어요. 다시 시도해주세요.');
+      if (err.code === statusCodes.SIGN_IN_CANCELLED) {
+        // 사용자가 취소 — 알림 불필요
+      } else if (err.code === statusCodes.IN_PROGRESS) {
+        // 이미 진행 중
+      } else {
+        Alert.alert('오류', err.message ?? 'Google 로그인에 실패했어요. 다시 시도해주세요.');
+      }
     } finally {
       setLoading(false);
     }
-  }
-
-  async function exchangeOAuthUrl(url: string) {
-    if (url.includes('code=')) {
-      const { error } = await supabase.auth.exchangeCodeForSession(url);
-      if (error) throw error;
-    } else if (url.includes('access_token=')) {
-      const fragment = url.split('#')[1] ?? '';
-      const params = Object.fromEntries(new URLSearchParams(fragment));
-      const { error } = await supabase.auth.setSession({
-        access_token: params.access_token,
-        refresh_token: params.refresh_token,
-      });
-      if (error) throw error;
-    }
-  }
-
-  async function waitForAppActive(): Promise<void> {
-    return new Promise((resolve) => {
-      const sub = AppState.addEventListener('change', (state) => {
-        if (state === 'active') {
-          sub.remove();
-          resolve();
-        }
-      });
-      // 최대 2분 fallback
-      setTimeout(() => { sub.remove(); resolve(); }, 120000);
-    });
-  }
-
-  // AsyncStorage 기반 세션 폴링 (인스턴스 무관하게 동작)
-  async function waitForSession(maxWaitMs: number) {
-    const start = Date.now();
-    while (Date.now() - start < maxWaitMs) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) return session;
-    }
-    return null;
-  }
-
-  // 세션 확인 후 유저 프로필 직접 로드
-  async function loadAndSetUser(userId: string, email: string) {
-    const setUser = useFridgeStore.getState().setUser;
-    const { data: userData } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    setUser(userData ?? ({ id: userId, email } as any));
-  }
-
-  async function waitForUser(maxWaitMs: number): Promise<boolean> {
-    const start = Date.now();
-    while (Date.now() - start < maxWaitMs) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const user = useFridgeStore.getState().user;
-      if (user) return true;
-    }
-    return false;
   }
 
   async function handleEmailAuth() {
@@ -134,7 +65,6 @@ export default function LoginScreen() {
       if (mode === 'signup') {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        // 가입 즉시 로그인 후 이동 (이메일 인증 OFF 상태)
         const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
         if (loginError) throw loginError;
         router.replace('/');
@@ -164,7 +94,7 @@ export default function LoginScreen() {
         {/* 상단 타이틀 */}
         <View style={styles.topSection}>
           <Text style={styles.emoji}>🧊</Text>
-          <Text style={styles.title}>냉장고 매니저</Text>
+          <Text style={styles.title}>냉장고 박사</Text>
           <Text style={styles.subtitle}>
             {mode === 'login'
               ? '다시 오셨군요! 로그인해주세요.'
@@ -220,11 +150,11 @@ export default function LoginScreen() {
           <View style={styles.dividerLine} />
         </View>
 
-        {/* 소셜 로그인 버튼 (추후 연동) */}
+        {/* 네이티브 Google 로그인 */}
         <View style={styles.socialButtons}>
           <TouchableOpacity
             style={[styles.googleBtn, loading && { opacity: 0.6 }]}
-            onPress={() => handleOAuth('google')}
+            onPress={handleGoogleSignIn}
             disabled={loading}
           >
             <View style={styles.googleBtnInner}>
@@ -287,13 +217,6 @@ const styles = StyleSheet.create({
   dividerLine: { flex: 1, height: 1, backgroundColor: '#E5E8EB' },
   dividerText: { marginHorizontal: 12, color: '#8B95A1', fontSize: 13 },
   socialButtons: { gap: 10, marginBottom: 24 },
-  kakaoBtn: {
-    backgroundColor: '#FEE500',
-    borderRadius: 10,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  kakaoBtnText: { fontSize: 15, fontWeight: '700', color: '#191919' },
   googleBtn: {
     backgroundColor: '#FFFFFF',
     borderRadius: 50,

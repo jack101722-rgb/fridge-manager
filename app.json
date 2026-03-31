@@ -73,7 +73,13 @@
           "color": "#3182F6"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.278313269161-pmi3vovdlt6v6kgoq0n29v07gvr753t9"
+        }
+      ]
     ],
     "extra": {
       "router": {},
