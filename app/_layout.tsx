@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, LogBox } from 'react-native';
+import { View, ActivityIndicator, LogBox, AppState } from 'react-native';
 import * as Linking from 'expo-linking';
 import * as Notifications from 'expo-notifications';
 
@@ -114,10 +114,32 @@ export default function RootLayout() {
       }
     );
 
+    // AppState 리스너: 앱이 포그라운드로 돌아올 때 세션 확인 (OAuth 후 딥링크 처리 보장)
+    const appStateSub = AppState.addEventListener('change', async (nextState) => {
+      if (nextState === 'active') {
+        // 딥링크 exchange가 완료될 때까지 최대 6초 폴링
+        for (let i = 0; i < 20; i++) {
+          await new Promise((r) => setTimeout(r, 300));
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user && !useFridgeStore.getState().user) {
+            try {
+              await loadUserProfile(session.user.id, session.user.email!);
+              router.replace('/');
+            } catch (e) {
+              console.warn('AppState session restore error:', e);
+            }
+            return;
+          }
+          if (useFridgeStore.getState().user) return; // 이미 로그인됨
+        }
+      }
+    });
+
     return () => {
       notifSub.remove();
       subscription.unsubscribe();
       linkingSub.remove();
+      appStateSub.remove();
     };
   }, []);
 

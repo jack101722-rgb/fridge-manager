@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, SafeAreaView, KeyboardAvoidingView,
-  Platform, ActivityIndicator, Alert, Image
+  Platform, ActivityIndicator, Alert, Image, AppState
 } from 'react-native';
 import { router } from 'expo-router';
 import * as Linking from 'expo-linking';
@@ -32,22 +32,25 @@ export default function LoginScreen() {
       if (!data.url) throw new Error('OAuth URL을 받지 못했어요.');
 
       if (Platform.OS === 'android') {
-        // Android: 시스템 브라우저로 열기 (CCT보다 딥링크 처리가 안정적)
-        // _layout.tsx의 Linking 리스너가 OAuth 콜백을 처리함
+        // Android: 시스템 브라우저로 열기
         await Linking.openURL(data.url);
+        // 앱이 포그라운드로 돌아올 때까지 대기 (사용자가 브라우저에서 인증 완료)
+        await waitForAppActive();
+        // _layout.tsx의 AppState 리스너가 세션 확인 + 네비게이션 처리
+        // user가 store에 세팅될 때까지 최대 10초 대기
+        const loggedIn = await waitForUser(10000);
+        if (!loggedIn) throw new Error('로그인에 실패했어요. 다시 시도해주세요.');
+        router.replace('/');
       } else {
         // iOS: openAuthSessionAsync가 안정적으로 동작
         const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
         if (result.type === 'success' && result.url) {
           try { await exchangeOAuthUrl(result.url); } catch (_) {}
         }
+        const loggedIn = await waitForUser(8000);
+        if (!loggedIn) throw new Error('로그인에 실패했어요. 다시 시도해주세요.');
+        router.replace('/');
       }
-
-      // Android/iOS 공통: user가 store에 세팅될 때까지 대기
-      // onAuthStateChange → loadUserProfile → setUser 완료 후 이동
-      const loggedIn = await waitForUser(120000);
-      if (!loggedIn) throw new Error('로그인에 실패했어요. 다시 시도해주세요.');
-      router.replace('/');
     } catch (err: any) {
       Alert.alert('오류', err.message ?? '로그인에 실패했어요. 다시 시도해주세요.');
     } finally {
@@ -68,6 +71,19 @@ export default function LoginScreen() {
       });
       if (error) throw error;
     }
+  }
+
+  async function waitForAppActive(): Promise<void> {
+    return new Promise((resolve) => {
+      const sub = AppState.addEventListener('change', (state) => {
+        if (state === 'active') {
+          sub.remove();
+          resolve();
+        }
+      });
+      // 최대 2분 fallback
+      setTimeout(() => { sub.remove(); resolve(); }, 120000);
+    });
   }
 
   async function waitForUser(maxWaitMs: number): Promise<boolean> {
