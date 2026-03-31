@@ -7,6 +7,7 @@ import {
 import { router } from 'expo-router';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
+import { Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useFridgeStore } from '../store/fridgeStore';
 
@@ -31,18 +32,21 @@ export default function LoginScreen() {
       if (error) throw error;
       if (!data.url) throw new Error('OAuth URL을 받지 못했어요.');
 
-      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-
-      if (result.type === 'success' && result.url) {
-        // WebBrowser가 URL을 직접 캡처한 경우 — 세션 교환만 하고 네비게이션은 아래에서
-        // _layout.tsx가 먼저 처리했을 수도 있으니 에러는 무시
-        try {
-          await exchangeOAuthUrl(result.url);
-        } catch (_) {}
+      if (Platform.OS === 'android') {
+        // Android: 시스템 브라우저로 열기 (CCT보다 딥링크 처리가 안정적)
+        // _layout.tsx의 Linking 리스너가 OAuth 콜백을 처리함
+        await Linking.openURL(data.url);
+      } else {
+        // iOS: openAuthSessionAsync가 안정적으로 동작
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+        if (result.type === 'success' && result.url) {
+          try { await exchangeOAuthUrl(result.url); } catch (_) {}
+        }
       }
-      // 'success'든 'dismiss'든 공통:
-      // onAuthStateChange → loadUserProfile → setUser 완료까지 대기 후 이동
-      const loggedIn = await waitForUser(8000);
+
+      // Android/iOS 공통: user가 store에 세팅될 때까지 대기
+      // onAuthStateChange → loadUserProfile → setUser 완료 후 이동
+      const loggedIn = await waitForUser(120000);
       if (!loggedIn) throw new Error('로그인에 실패했어요. 다시 시도해주세요.');
       router.replace('/');
     } catch (err: any) {
