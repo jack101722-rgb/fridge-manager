@@ -58,10 +58,8 @@ export default function RootLayout() {
             if (!error) success = true;
           }
         }
-        // 세션 설정 성공 시 명시적 네비게이션 (onAuthStateChange가 늦게 올 경우 대비)
-        if (success) {
-          router.replace('/');
-        }
+        // 세션 교환 성공 — 네비게이션은 onAuthStateChange(SIGNED_IN)에서 처리
+        // (onAuthStateChange는 loadUserProfile 완료 후 router.replace를 호출함)
       } catch (e) {
         console.warn('OAuth deep link error:', e);
       }

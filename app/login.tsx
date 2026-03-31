@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '../lib/supabase';
+import { useFridgeStore } from '../store/fridgeStore';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -37,10 +38,11 @@ export default function LoginScreen() {
         await processOAuthUrl(result.url);
       } else {
         // Android에서 흔히 발생: WebBrowser가 'dismiss'를 반환하지만
-        // _layout.tsx의 Linking 리스너가 딥링크를 처리함
-        // 세션이 설정될 때까지 최대 6초 대기
-        const session = await waitForSession(6000);
-        if (!session) {
+        // _layout.tsx의 Linking 리스너가 딥링크를 처리하고
+        // onAuthStateChange가 loadUserProfile 완료 후 자동으로 이동함
+        // user가 store에 세팅될 때까지 최대 8초 대기
+        const loggedIn = await waitForUser(8000);
+        if (!loggedIn) {
           throw new Error('로그인에 실패했어요. 다시 시도해주세요.');
         }
         router.replace('/');
@@ -70,12 +72,13 @@ export default function LoginScreen() {
     router.replace('/');
   }
 
-  async function waitForSession(maxWaitMs: number): Promise<boolean> {
+  async function waitForUser(maxWaitMs: number): Promise<boolean> {
     const start = Date.now();
     while (Date.now() - start < maxWaitMs) {
-      await new Promise((resolve) => setTimeout(resolve, 400));
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) return true;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      // user가 store에 세팅되면 loadUserProfile까지 완료된 것
+      const user = useFridgeStore.getState().user;
+      if (user) return true;
     }
     return false;
   }
