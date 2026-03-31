@@ -34,12 +34,13 @@ export default function LoginScreen() {
       if (Platform.OS === 'android') {
         // Android: 시스템 브라우저로 열기
         await Linking.openURL(data.url);
-        // 앱이 포그라운드로 돌아올 때까지 대기 (사용자가 브라우저에서 인증 완료)
+        // 앱이 포그라운드로 돌아올 때까지 대기
         await waitForAppActive();
-        // _layout.tsx의 AppState 리스너가 세션 확인 + 네비게이션 처리
-        // user가 store에 세팅될 때까지 최대 10초 대기
-        const loggedIn = await waitForUser(10000);
-        if (!loggedIn) throw new Error('로그인에 실패했어요. 다시 시도해주세요.');
+        // AsyncStorage 기반으로 세션 폴링 (다른 인스턴스에서 설정된 세션도 감지)
+        const session = await waitForSession(15000);
+        if (!session) throw new Error('로그인에 실패했어요. 다시 시도해주세요.');
+        // 세션 확인됨 → 유저 프로필 직접 로드 후 이동
+        await loadAndSetUser(session.user.id, session.user.email!);
         router.replace('/');
       } else {
         // iOS: openAuthSessionAsync가 안정적으로 동작
@@ -84,6 +85,28 @@ export default function LoginScreen() {
       // 최대 2분 fallback
       setTimeout(() => { sub.remove(); resolve(); }, 120000);
     });
+  }
+
+  // AsyncStorage 기반 세션 폴링 (인스턴스 무관하게 동작)
+  async function waitForSession(maxWaitMs: number) {
+    const start = Date.now();
+    while (Date.now() - start < maxWaitMs) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) return session;
+    }
+    return null;
+  }
+
+  // 세션 확인 후 유저 프로필 직접 로드
+  async function loadAndSetUser(userId: string, email: string) {
+    const setUser = useFridgeStore.getState().setUser;
+    const { data: userData } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    setUser(userData ?? ({ id: userId, email } as any));
   }
 
   async function waitForUser(maxWaitMs: number): Promise<boolean> {
