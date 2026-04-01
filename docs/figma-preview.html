@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>냉장고 박사 — 화면 미리보기</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #E8ECF0;
+      font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      padding: 40px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #191F28;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #8B95A1;
+      margin-bottom: 40px;
+    }
+
+    .screens-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .screen-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .screen-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #4E5968;
+    }
+
+    /* 폰 프레임 */
+    .phone {
+      width: 390px;
+      height: 844px;
+      background: #fff;
+      border-radius: 48px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1);
+      position: relative;
+      border: 8px solid #1C1C1E;
+    }
+
+    .phone-inner {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 상태바 */
+    .status-bar {
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px 0;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* 탭바 */
+    .tab-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 84px;
+      background: #fff;
+      border-top: 1px solid #E5E8EB;
+      display: flex;
+      align-items: flex-start;
+      padding-top: 12px;
+    }
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .tab-icon { font-size: 22px; }
+    .tab-label { font-size: 10px; color: #B0B8C1; }
+    .tab-item.active .tab-label { color: #3182F6; }
+
+    /* ── 공통 컴포넌트 ── */
+    .screen-header {
+      padding: 20px 20px 12px;
+    }
+    .screen-title { font-size: 22px; font-weight: 700; color: #191F28; }
+    .screen-subtitle { font-size: 14px; color: #8B95A1; margin-top: 4px; }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    /* ════════════════════════════════════════
+       1. 로그인 화면
+    ════════════════════════════════════════ */
+    .login-screen {
+      background: #fff;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 24px 40px;
+    }
+    .login-top { text-align: center; margin-bottom: 40px; }
+    .login-emoji { font-size: 56px; margin-bottom: 12px; }
+    .login-title { font-size: 26px; font-weight: 700; color: #191F28; margin-bottom: 8px; }
+    .login-sub { font-size: 15px; color: #8B95A1; }
+    .input-label { font-size: 13px; font-weight: 600; color: #4E5968; margin-bottom: 8px; }
+    .input-field {
+      border: 1px solid #E5E8EB;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 15px;
+      color: #B0B8C1;
+      background: #F9FAFB;
+      margin-bottom: 16px;
+    }
+    .primary-btn {
+      background: #3182F6;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      margin-top: 8px;
+      margin-bottom: 24px;
+    }
+    .divider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .divider-line { flex: 1; height: 1px; background: #E5E8EB; }
+    .divider-text { font-size: 13px; color: #8B95A1; }
+    .google-btn {
+      border: 1px solid #E0E0E0;
+      border-radius: 50px;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .google-logo {
+      width: 22px; height: 22px;
+      background: linear-gradient(135deg, #4285F4 25%, #EA4335 25%, #EA4335 50%, #FBBC05 50%, #FBBC05 75%, #34A853 75%);
+      border-radius: 50%;
+      font-size: 12px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700;
+    }
+    .google-btn-text { font-size: 15px; font-weight: 600; color: #3C4043; }
+    .switch-mode { text-align: center; font-size: 14px; color: #3182F6; font-weight: 500; }
+
+    /* ════════════════════════════════════════
+       2. 홈(냉장고) 화면
+    ════════════════════════════════════════ */
+    .home-content {
+      flex: 1;
+      overflow: hidden;
+      padding-bottom: 84px;
+    }
+    .fridge-name-row {
+      padding: 20px 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .fridge-name { font-size: 22px; font-weight: 700; color: #191F28; }
+    .fridge-count { font-size: 14px; color: #8B95A1; margin-top: 2px; }
+    .progress-card {
+      margin: 12px 16px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .progress-stage { font-size: 13px; font-weight: 600; color: #3182F6; margin-bottom: 6px; }
+    .progress-bar-bg { height: 6px; background: #EFF6FF; border-radius: 3px; margin-bottom: 8px; }
+    .progress-bar-fill { height: 6px; background: #3182F6; border-radius: 3px; width: 75%; }
+    .progress-hint { font-size: 12px; color: #8B95A1; }
+    .storage-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px 12px;
+    }
+    .storage-tab {
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      background: #F2F4F6;
+      color: #6B7684;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .storage-tab.active { background: #EFF6FF; color: #3182F6; }
+    .tab-badge {
+      background: #3182F6;
+      color: #fff;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 6px;
+    }
+    .sort-tabs { display: flex; gap: 8px; padding: 0 16px 12px; }
+    .sort-tab {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: #8B95A1;
+      border: 1px solid #E5E8EB;
+    }
+    .sort-tab.active { background: #191F28; color: #fff; border-color: #191F28; }
+    .ingredient-list { padding: 0 16px; display: flex; flex-direction: column; gap: 0; }
+    .ingredient-row {
+      display: flex;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid #F2F4F6;
+      gap: 12px;
+    }
+    .ing-emoji { font-size: 28px; width: 40px; text-align: center; }
+    .ing-info { flex: 1; }
+    .ing-name { font-size: 15px; font-weight: 600; color: #191F28; }
+    .ing-qty { font-size: 12px; color: #8B95A1; margin-top: 2px; }
+    .d-day { font-size: 14px; font-weight: 700; }
+    .d-safe { color: #00B493; }
+    .d-warning { color: #F59E0B; }
+    .d-danger { color: #F04452; }
+    .fab {
+      position: absolute;
+      bottom: 100px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      background: #3182F6;
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: white;
+      box-shadow: 0 4px 16px rgba(49,130,246,0.4);
+    }
+
+    /* ════════════════════════════════════════
+       3. 메뉴 추천
+    ════════════════════════════════════════ */
+    .menu-content { padding-bottom: 84px; overflow: hidden; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 20px;
+    }
+    .section-emoji { font-size: 20px; }
+    .section-title { font-size: 16px; font-weight: 700; color: #191F28; }
+    .menu-scroll { display: flex; gap: 12px; padding: 0 20px 4px; overflow: hidden; }
+    .menu-card {
+      width: 160px;
+      min-width: 160px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .mc-emoji { font-size: 32px; margin-bottom: 8px; }
+    .mc-name { font-size: 14px; font-weight: 700; color: #191F28; margin-bottom: 4px; }
+    .mc-desc { font-size: 12px; color: #8B95A1; line-height: 17px; margin-bottom: 8px; }
+    .mc-meta { display: flex; gap: 8px; }
+    .mc-meta-text { font-size: 11px; color: #B0B8C1; }
+    .mc-tags { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+    .mc-tag { background: #F2F4F6; border-radius: 6px; padding: 2px 6px; font-size: 10px; color: #6B7684; }
+    .divider-section { height: 8px; background: #F2F4F6; margin: 8px 0; }
+    .l2-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      margin: 0 20px 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .l2-top { display: flex; gap: 12px; margin-bottom: 10px; align-items: flex-start; }
+    .l2-emoji { font-size: 36px; }
+    .l2-info { flex: 1; }
+    .l2-name { font-size: 15px; font-weight: 700; color: #191F28; margin-bottom: 3px; }
+    .l2-desc { font-size: 12px; color: #8B95A1; margin-bottom: 6px; }
+    .l2-meta { display: flex; gap: 10px; }
+    .l2-meta-text { font-size: 12px; color: #B0B8C1; }
+    .l2-ing { border-top: 1px solid #F2F4F6; padding-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+    .l2-ing-row { display: flex; gap: 6px; }
+    .l2-ing-label { font-size: 12px; font-weight: 600; color: #27AE60; min-width: 44px; }
+    .l2-ing-text { font-size: 12px; color: #4E5968; flex: 1; }
+    .unlock-badge { font-size: 12px; color: #3182F6; margin-top: 2px; font-weight: 500; }
+
+    /* ════════════════════════════════════════
+       4. 장보기
+    ════════════════════════════════════════ */
+    .shopping-content { padding: 0 16px; padding-bottom: 84px; }
+    .shop-item {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 8px;
+      gap: 12px;
+    }
+    .checkbox { width: 24px; height: 24px; border-radius: 12px; border: 2px solid #D1D6DB; flex-shrink: 0; }
+    .checkbox.done { background: #3182F6; border-color: #3182F6; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 700; }
+    .shop-name { font-size: 15px; color: #191F28; font-weight: 500; flex: 1; }
+    .shop-name.done { color: #8B95A1; text-decoration: line-through; }
+    .shop-source { font-size: 12px; color: #8B95A1; }
+    .shop-qty { font-size: 13px; color: #8B95A1; }
+    .bottom-bar-btn {
+      position: absolute;
+      bottom: 90px;
+      left: 16px;
+      right: 16px;
+      background: #3182F6;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    /* ════════════════════════════════════════
+       5. 마이페이지
+    ════════════════════════════════════════ */
+    .mypage-content { padding: 0 16px 84px; overflow: hidden; }
+    .grade-card {
+      background: #F5F3FF;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .grade-emoji { font-size: 32px; }
+    .grade-title { font-size: 15px; font-weight: 700; color: #7C3AED; }
+    .grade-desc { font-size: 12px; color: #6B7684; margin-top: 2px; }
+    .stats-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .stat-card {
+      flex: 1;
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .stat-value { font-size: 22px; font-weight: 700; color: #3182F6; }
+    .stat-label { font-size: 11px; color: #8B95A1; margin-top: 4px; }
+    .savings-card {
+      background: #EDFFF5;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .savings-text { font-size: 13px; color: #4E5968; margin-bottom: 4px; }
+    .savings-amount { font-size: 20px; font-weight: 700; color: #00B493; }
+    .section-card {
+      background: #fff;
+      border-radius: 16px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .section-card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #191F28;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid #F2F4F6;
+    }
+    .menu-row {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid #F2F4F6;
+      justify-content: space-between;
+    }
+    .menu-row:last-child { border-bottom: none; }
+    .menu-row-text { font-size: 15px; color: #191F28; }
+    .menu-row-chevron { font-size: 16px; color: #B0B8C1; }
+    .menu-row-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .badge-on { background: #EDFFF5; color: #00B493; }
+    .badge-off { background: #FFF0F0; color: #F04452; }
+
+    /* ════════════════════════════════════════
+       6. 서비스 온보딩 (welcome)
+    ════════════════════════════════════════ */
+    .onboard-slide {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 36px 140px;
+    }
+    .onboard-emoji-circle {
+      width: 120px; height: 120px;
+      border-radius: 60px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 40px;
+    }
+    .onboard-emoji { font-size: 56px; }
+    .onboard-title {
+      font-size: 26px; font-weight: 700; color: #111111;
+      text-align: center; line-height: 36px; margin-bottom: 16px;
+    }
+    .onboard-desc {
+      font-size: 16px; color: #6B7684;
+      text-align: center; line-height: 24px;
+    }
+    .onboard-skip {
+      position: absolute; top: 56px; right: 24px;
+      font-size: 15px; color: #8B95A1; font-weight: 500;
+    }
+    .onboard-bottom {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 20px 24px 48px;
+      background: #fff;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .onboard-dots { display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .onboard-dot { height: 8px; border-radius: 4px; background: #D1D5DB; width: 8px; }
+    .onboard-dot.active { background: #3182F6; width: 20px; }
+    .onboard-btn {
+      background: #3182F6; border-radius: 14px;
+      padding: 16px; text-align: center;
+      color: #fff; font-size: 17px; font-weight: 700;
+    }
+
+    /* ════════════════════════════════════════
+       7. 설문 화면 (survey)
+    ════════════════════════════════════════ */
+    .survey-header {
+      display: flex; align-items: center;
+      padding: 56px 24px 16px;
+      gap: 12px;
+    }
+    .survey-back { font-size: 28px; color: #111; line-height: 32px; padding-right: 4px; }
+    .survey-progress-track {
+      flex: 1; height: 4px; background: #E5E8EB;
+      border-radius: 2px; overflow: hidden;
+    }
+    .survey-progress-fill { height: 100%; background: #3182F6; border-radius: 2px; }
+    .survey-step-label { font-size: 13px; color: #8B95A1; font-weight: 500; }
+    .survey-body { padding: 28px 24px 24px; }
+    .survey-question { font-size: 24px; font-weight: 700; color: #111; line-height: 34px; margin-bottom: 8px; }
+    .survey-sub { font-size: 15px; color: #6B7684; line-height: 22px; margin-bottom: 32px; }
+    .survey-options { display: flex; flex-direction: column; gap: 10px; }
+    .survey-option {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 18px; border-radius: 12px;
+      border: 1.5px solid #E5E8EB; background: #FAFAFA;
+    }
+    .survey-option.selected { border-color: #3182F6; background: #EEF4FF; }
+    .survey-option-text { font-size: 16px; color: #333D4B; }
+    .survey-option.selected .survey-option-text { color: #3182F6; font-weight: 600; }
+    .survey-check { font-size: 16px; color: #3182F6; font-weight: 700; }
+    .survey-footer {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 12px 24px 48px; background: #fff;
+    }
+    .survey-btn {
+      background: #3182F6; border-radius: 14px;
+      padding: 16px; text-align: center;
+      color: #fff; font-size: 17px; font-weight: 700;
+    }
+    .survey-btn.disabled { background: #D1D5DB; }
+
+    /* 요일 칩 */
+    .weekday-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+    .weekday-chip {
+      width: 52px; height: 52px; border-radius: 26px;
+      border: 1.5px solid #E5E8EB; background: #FAFAFA;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 600; color: #333D4B;
+    }
+    .weekday-chip.selected { background: #3182F6; border-color: #3182F6; color: #fff; }
+    .weekday-chip-wide {
+      padding: 0 16px; height: 52px; border-radius: 26px;
+      border: 1.5px solid #E5E8EB; background: #FAFAFA;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; color: #333D4B;
+    }
+  </style>
+</head>
+<body>
+
+<h1>냉장고 박사 — 화면 미리보기</h1>
+<p class="subtitle">브라우저 확대/축소(Cmd+/-) 또는 스크롤로 탐색. 각 화면을 캡처해 Figma에 import하세요.</p>
+
+<div class="screens-row">
+
+  <!-- ① 로그인 -->
+  <div class="screen-wrap">
+    <div class="screen-label">① 로그인</div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar" style="color:#191F28;">
+          <span>9:41</span>
+          <span>●●● 📶 🔋</span>
+        </div>
+        <div class="login-screen">
+          <div class="login-top">
+            <div class="login-emoji">🧊</div>
+            <div class="login-title">냉장고 박사</div>
+            <div class="login-sub">다시 오셨군요! 로그인해주세요.</div>
+          </div>
+          <div class="input-label">이메일</div>
+          <div class="input-field">example@email.com</div>
+          <div class="input-label">비밀번호</div>
+          <div class="input-field">••••••••</div>
+          <div class="primary-btn">로그인</div>
+          <div class="divider-row">
+            <div class="divider-line"></div>
+            <div class="divider-text">또는</div>
+            <div class="divider-line"></div>
+          </div>
+          <div class="google-btn">
+            <div class="google-logo">G</div>
+            <div class="google-btn-text">Google로 시작하기</div>
+          </div>
+          <div class="switch-mode">아직 계정이 없어요 → 회원가입</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 홈(냉장고) -->
+  <div class="screen-wrap">
+    <div class="screen-label">② 홈 — 냉장고</div>
+    <div class="phone">
+      <div class="phone-inner" style="background:#F9FAFB;">
+        <div class="status-bar" style="color:#191F28;">
+          <span>9:41</span>
+          <span>●●● 📶 🔋</span>
+        </div>
+        <div class="fridge-name-row">
+          <div>
+            <div class="fridge-name">우리 냉장고</div>
+            <div class="fridge-count">전체 42개</div>
+          </div>
+        </div>
+        <div class="progress-card">
+          <div class="progress-stage">완성 단계 &nbsp; 42개 등록됨</div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:100%"></div></div>
+          <div class="progress-hint">재료를 상세히 등록한 유저는 평균 월 34,000원 절약해요</div>
+        </div>
+        <div class="storage-tabs">
+          <div class="storage-tab active">❄️ 냉장 <span class="tab-badge">19</span></div>
+          <div class="storage-tab">🧊 냉동 <span style="background:#F2F4F6;color:#6B7684;border-radius:10px;font-size:11px;font-weight:700;padding:1px 6px;">1</span></div>
+          <div class="storage-tab">🌡️ 실온 <span style="background:#F2F4F6;color:#6B7684;border-radius:10px;font-size:11px;font-weight:700;padding:1px 6px;">22</span></div>
+        </div>
+        <div class="sort-tabs">
+          <div class="sort-tab">최근 등록</div>
+          <div class="sort-tab active">D-day순</div>
+          <div class="sort-tab">이름순</div>
+        </div>
+        <div class="ingredient-list">
+          <div class="ingredient-row">
+            <div class="ing-emoji">🍅</div>
+            <div class="ing-info"><div class="ing-name">방울토마토</div><div class="ing-qty">1팩</div></div>
+            <div class="d-day d-warning">D-5</div>
+          </div>
+          <div class="ingredient-row">
+            <div class="ing-emoji">🌶️</div>
+            <div class="ing-info"><div class="ing-name">청양고추</div><div class="ing-qty">5개</div></div>
+            <div class="d-day d-safe">D-9</div>
+          </div>
+          <div class="ingredient-row">
+            <div class="ing-emoji">🧄</div>
+            <div class="ing-info"><div class="ing-name">다진마늘</div><div class="ing-qty">1개</div></div>
+            <div class="d-day d-safe">D-13</div>
+          </div>
+          <div class="ingredient-row">
+            <div class="ing-emoji">🫚</div>
+            <div class="ing-info"><div class="ing-name">다진생강</div><div class="ing-qty">1개</div></div>
+            <div class="d-day d-safe">D-13</div>
+          </div>
+          <div class="ingredient-row">
+            <div class="ing-emoji">🌿</div>
+            <div class="ing-info"><div class="ing-name">대파</div><div class="ing-qty">1묶음</div></div>
+            <div class="d-day d-safe">D-13</div>
+          </div>
+          <div class="ingredient-row">
+            <div class="ing-emoji">🥦</div>
+            <div class="ing-info"><div class="ing-name">무</div><div class="ing-qty">1개</div></div>
+            <div class="d-day d-safe">D-20</div>
+          </div>
+        </div>
+        <div class="fab">+</div>
+        <div class="tab-bar">
+          <div class="tab-item active"><div class="tab-icon">🏠</div><div class="tab-label" style="color:#3182F6;">냉장고</div></div>
+          <div class="tab-item"><div class="tab-icon">🍳</div><div class="tab-label">메뉴</div></div>
+          <div class="tab-item"><div class="tab-icon">🛒</div><div class="tab-label">장보기</div></div>
+          <div class="tab-item"><div class="tab-icon">👤</div><div class="tab-label">마이</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 메뉴 추천 -->
+  <div class="screen-wrap">
+    <div class="screen-label">③ 메뉴 추천</div>
+    <div class="phone">
+      <div class="phone-inner" style="background:#F9FAFB;">
+        <div class="status-bar" style="color:#191F28;">
+          <span>9:41</span>
+          <span>●●● 📶 🔋</span>
+        </div>
+        <div class="screen-header">
+          <div class="screen-title">메뉴 추천</div>
+          <div class="screen-subtitle">냉장고 재료로 만들 수 있는 메뉴예요</div>
+        </div>
+        <!-- Layer1 -->
+        <div class="section-header">
+          <span class="section-emoji">🍝</span>
+          <span class="section-title">양식 추천</span>
+        </div>
+        <div class="menu-scroll">
+          <div class="menu-card">
+            <div class="mc-emoji">🍝</div>
+            <div class="mc-name">크림파스타</div>
+            <div class="mc-desc">생크림과 베이컨으로 만드는 부드러운 파스타</div>
+            <div class="mc-meta"><span class="mc-meta-text">⏱ 25분</span><span class="mc-meta-text">쉬움</span></div>
+            <div class="mc-tags"><span class="mc-tag">#파스타</span><span class="mc-tag">#크림</span></div>
+          </div>
+          <div class="menu-card">
+            <div class="mc-emoji">🥑</div>
+            <div class="mc-name">아보카도 토스트</div>
+            <div class="mc-desc">아보카도와 달걀로 완성하는 브런치 토스트</div>
+            <div class="mc-meta"><span class="mc-meta-text">⏱ 15분</span><span class="mc-meta-text">쉬움</span></div>
+            <div class="mc-tags"><span class="mc-tag">#브런치</span><span class="mc-tag">#건강식</span></div>
+          </div>
+        </div>
+        <div class="divider-section"></div>
+        <!-- Layer2 -->
+        <div class="section-header">
+          <span class="section-emoji">✨</span>
+          <div>
+            <div class="section-title">내 냉장고 맞춤 추천</div>
+            <div class="unlock-badge">재료 16개 기준</div>
+          </div>
+        </div>
+        <div class="l2-card">
+          <div class="l2-top">
+            <div class="l2-emoji">🍝</div>
+            <div class="l2-info">
+              <div class="l2-name">토마토 스파게티</div>
+              <div class="l2-desc">토마토소스로 만드는 클래식 다이어트 파스타</div>
+              <div class="l2-meta"><span class="l2-meta-text">⏱ 20분</span><span class="l2-meta-text">쉬움</span></div>
+            </div>
+          </div>
+          <div class="l2-ing">
+            <div class="l2-ing-row"><span class="l2-ing-label">✅ 보유</span><span class="l2-ing-text">스파게티 면, 토마토소스, 마늘, 양파, 올리브유...</span></div>
+          </div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab-item"><div class="tab-icon">🏠</div><div class="tab-label">냉장고</div></div>
+          <div class="tab-item active"><div class="tab-icon">🍳</div><div class="tab-label" style="color:#3182F6;">메뉴</div></div>
+          <div class="tab-item"><div class="tab-icon">🛒</div><div class="tab-label">장보기</div></div>
+          <div class="tab-item"><div class="tab-icon">👤</div><div class="tab-label">마이</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ 장보기 -->
+  <div class="screen-wrap">
+    <div class="screen-label">④ 장보기</div>
+    <div class="phone">
+      <div class="phone-inner" style="background:#F9FAFB;">
+        <div class="status-bar" style="color:#191F28;">
+          <span>9:41</span>
+          <span>●●● 📶 🔋</span>
+        </div>
+        <div class="screen-header">
+          <div class="screen-title">장보기 목록</div>
+          <div class="screen-subtitle">3개 남았어요</div>
+        </div>
+        <div class="shopping-content">
+          <div class="shop-item">
+            <div class="checkbox"></div>
+            <div class="ing-info"><div class="shop-name">스파게티 면</div><div class="shop-source">토마토 스파게티 레시피</div></div>
+            <div class="shop-qty">200g</div>
+          </div>
+          <div class="shop-item">
+            <div class="checkbox"></div>
+            <div class="ing-info"><div class="shop-name">토마토소스</div><div class="shop-source">토마토 스파게티 레시피</div></div>
+            <div class="shop-qty">1캔</div>
+          </div>
+          <div class="shop-item">
+            <div class="checkbox"></div>
+            <div class="ing-info"><div class="shop-name">생크림</div><div class="shop-source">크림파스타 레시피</div></div>
+            <div class="shop-qty">200ml</div>
+          </div>
+          <div class="shop-item">
+            <div class="checkbox done">✓</div>
+            <div class="ing-info"><div class="shop-name done">올리브유</div></div>
+            <div class="shop-qty">1병</div>
+          </div>
+          <div class="shop-item">
+            <div class="checkbox done">✓</div>
+            <div class="ing-info"><div class="shop-name done">마늘</div></div>
+            <div class="shop-qty">1통</div>
+          </div>
+        </div>
+        <div class="bottom-bar-btn">냉장고에 추가하기 (2개)</div>
+        <div class="tab-bar">
+          <div class="tab-item"><div class="tab-icon">🏠</div><div class="tab-label">냉장고</div></div>
+          <div class="tab-item"><div class="tab-icon">🍳</div><div class="tab-label">메뉴</div></div>
+          <div class="tab-item active"><div class="tab-icon">🛒</div><div class="tab-label" style="color:#3182F6;">장보기</div></div>
+          <div class="tab-item"><div class="tab-icon">👤</div><div class="tab-label">마이</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ 마이페이지 -->
+  <div class="screen-wrap">
+    <div class="screen-label">⑤ 마이페이지</div>
+    <div class="phone">
+      <div class="phone-inner" style="background:#F9FAFB;">
+        <div class="status-bar" style="color:#191F28;">
+          <span>9:41</span>
+          <span>●●● 📶 🔋</span>
+        </div>
+        <div class="screen-header">
+          <div class="screen-title">마이페이지</div>
+        </div>
+        <div class="mypage-content">
+          <!-- 등급 -->
+          <div class="grade-card">
+            <div class="grade-emoji">👑</div>
+            <div>
+              <div class="grade-title">냉장고 정복자</div>
+              <div class="grade-desc">버린 재료 0개! 전설의 냉장고 관리자예요</div>
+            </div>
+          </div>
+          <!-- 통계 -->
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-value">5%</div><div class="stat-label">소진율</div></div>
+            <div class="stat-card"><div class="stat-value" style="color:#27AE60;">2개</div><div class="stat-label">먹은 재료</div></div>
+            <div class="stat-card"><div class="stat-value" style="color:#F04452;">0개</div><div class="stat-label">버린 재료</div></div>
+          </div>
+          <!-- 절약 -->
+          <div class="savings-card">
+            <div class="savings-text">🎉 이번 달 버린 식재료 없음!</div>
+            <div class="savings-amount">27,200원 어치 활용</div>
+          </div>
+          <!-- 냉장고 관리 -->
+          <div class="section-card">
+            <div class="section-card-title">냉장고 관리</div>
+            <div class="menu-row">
+              <span class="menu-row-text">👥 멤버 초대하기</span>
+              <span class="menu-row-chevron">›</span>
+            </div>
+            <div class="menu-row">
+              <span class="menu-row-text">🔔 알림 설정</span>
+              <span class="menu-row-badge badge-on">켜짐</span>
+            </div>
+          </div>
+          <!-- 계정 -->
+          <div class="section-card">
+            <div class="section-card-title">계정</div>
+            <div class="menu-row">
+              <span class="menu-row-text">📝 닉네임 변경</span>
+              <span class="menu-row-chevron">›</span>
+            </div>
+            <div class="menu-row">
+              <span class="menu-row-text" style="color:#F04452;">로그아웃</span>
+            </div>
+          </div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab-item"><div class="tab-icon">🏠</div><div class="tab-label">냉장고</div></div>
+          <div class="tab-item"><div class="tab-icon">🍳</div><div class="tab-label">메뉴</div></div>
+          <div class="tab-item"><div class="tab-icon">🛒</div><div class="tab-label">장보기</div></div>
+          <div class="tab-item active"><div class="tab-icon">👤</div><div class="tab-label" style="color:#3182F6;">마이</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ⑥ 서비스 온보딩 슬라이드 1 (welcome) -->
+  <div class="screen-wrap">
+    <div class="screen-label">⑥ 서비스 온보딩 — 1/4</div>
+    <div class="phone">
+      <div class="phone-inner" style="background:#EEF4FF;">
+        <div class="status-bar" style="color:#191F28;"><span>9:41</span><span>●●● 📶 🔋</span></div>
+        <div class="onboard-skip">건너뛰기</div>
+        <div class="onboard-slide">
+          <div class="onboard-emoji-circle" style="background:rgba(49,130,246,0.13);">
+            <span class="onboard-emoji">🧊</span>
+          </div>
+          <div class="onboard-title">냉장고 박사에<br>오신 걸 환영해요!</div>
+          <div class="onboard-desc">냉장고 속 재료를 스마트하게 관리하고<br>음식 낭비를 줄여보세요</div>
+        </div>
+        <div class="onboard-bottom">
+          <div class="onboard-dots">
+            <div class="onboard-dot active"></div>
+            <div class="onboard-dot"></div>
+            <div class="onboard-dot"></div>
+            <div class="onboard-dot"></div>
+          </div>
+          <div class="onboard-btn">다음</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑦ 서비스 온보딩 슬라이드 4 (마지막) -->
+  <div class="screen-wrap">
+    <div class="screen-label">⑦ 서비스 온보딩 — 4/4</div>
+    <div class="phone">
+      <div class="phone-inner" style="background:#FFF8EE;">
+        <div class="status-bar" style="color:#191F28;"><span>9:41</span><span>●●● 📶 🔋</span></div>
+        <div class="onboard-slide">
+          <div class="onboard-emoji-circle" style="background:rgba(245,166,35,0.13);">
+            <span class="onboard-emoji">🍳</span>
+          </div>
+          <div class="onboard-title">지금 있는 재료로<br>오늘 메뉴를 추천해요</div>
+          <div class="onboard-desc">냉장고 속 재료에 맞춰<br>AI가 딱 맞는 레시피를 골라줘요</div>
+        </div>
+        <div class="onboard-bottom">
+          <div class="onboard-dots">
+            <div class="onboard-dot"></div>
+            <div class="onboard-dot"></div>
+            <div class="onboard-dot"></div>
+            <div class="onboard-dot active"></div>
+          </div>
+          <div class="onboard-btn">시작하기</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑧ 회원가입 후 인트로 슬라이드 1 -->
+  <div class="screen-wrap">
+    <div class="screen-label">⑧ 가입 후 인트로 — 1/3</div>
+    <div class="phone">
+      <div class="phone-inner" style="background:#EEF4FF;">
+        <div class="status-bar" style="color:#191F28;"><span>9:41</span><span>●●● 📶 🔋</span></div>
+        <div class="onboard-skip">건너뛰기</div>
+        <div class="onboard-slide">
+          <div class="onboard-emoji-circle" style="background:rgba(49,130,246,0.13);">
+            <span class="onboard-emoji">🥦</span>
+          </div>
+          <div class="onboard-title">냉장고 속 재료를<br>한눈에 관리해요</div>
+          <div class="onboard-desc">영수증 촬영, 바코드 스캔으로<br>재료를 쉽게 등록하세요</div>
+        </div>
+        <div class="onboard-bottom">
+          <div class="onboard-dots">
+            <div class="onboard-dot active"></div>
+            <div class="onboard-dot"></div>
+            <div class="onboard-dot"></div>
+          </div>
+          <div class="onboard-btn">다음</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑨ 설문 — 1단계: 가구 수 -->
+  <div class="screen-wrap">
+    <div class="screen-label">⑨ 설문 — 1/7 가구 수</div>
+    <div class="phone">
+      <div class="phone-inner" style="background:#fff;">
+        <div class="survey-header">
+          <span class="survey-back">‹</span>
+          <div class="survey-progress-track">
+            <div class="survey-progress-fill" style="width:14%;"></div>
+          </div>
+          <span class="survey-step-label">1 / 7</span>
+        </div>
+        <div class="survey-body">
+          <div class="survey-question">몇 명이 함께 드세요?</div>
+          <div class="survey-sub">가족 수에 맞게 레시피와 식재료를 추천해드려요</div>
+          <div class="survey-options">
+            <div class="survey-option selected">
+              <span class="survey-option-text">2명</span>
+              <span class="survey-check">✓</span>
+            </div>
+            <div class="survey-option"><span class="survey-option-text">1명</span></div>
+            <div class="survey-option"><span class="survey-option-text">3명</span></div>
+            <div class="survey-option"><span class="survey-option-text">4명</span></div>
+            <div class="survey-option"><span class="survey-option-text">5명 이상</span></div>
+          </div>
+        </div>
+        <div class="survey-footer">
+          <div class="survey-btn">다음</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑩ 설문 — 2단계: 요리 취향 -->
+  <div class="screen-wrap">
+    <div class="screen-label">⑩ 설문 — 2/7 요리 취향</div>
+    <div class="phone">
+      <div class="phone-inner" style="background:#fff;">
+        <div class="survey-header">
+          <span class="survey-back">‹</span>
+          <div class="survey-progress-track">
+            <div class="survey-progress-fill" style="width:28%;"></div>
+          </div>
+          <span class="survey-step-label">2 / 7</span>
+        </div>
+        <div class="survey-body">
+          <div class="survey-question">어떤 요리를 즐겨 드세요?</div>
+          <div class="survey-sub">선호하는 요리 스타일을 모두 선택해주세요</div>
+          <div class="survey-options">
+            <div class="survey-option selected">
+              <span class="survey-option-text">🍚 한식</span>
+              <span class="survey-check">✓</span>
+            </div>
+            <div class="survey-option selected">
+              <span class="survey-option-text">🍝 양식</span>
+              <span class="survey-check">✓</span>
+            </div>
+            <div class="survey-option"><span class="survey-option-text">🥢 중식</span></div>
+            <div class="survey-option"><span class="survey-option-text">🍣 일식</span></div>
+            <div class="survey-option"><span class="survey-option-text">🍜 동남아</span></div>
+            <div class="survey-option"><span class="survey-option-text">🥙 분식</span></div>
+          </div>
+        </div>
+        <div class="survey-footer">
+          <div class="survey-btn">다음</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑪ 설문 — 7단계: 장보기 요일 -->
+  <div class="screen-wrap">
+    <div class="screen-label">⑪ 설문 — 6/7 장보기 요일</div>
+    <div class="phone">
+      <div class="phone-inner" style="background:#fff;">
+        <div class="survey-header">
+          <span class="survey-back">‹</span>
+          <div class="survey-progress-track">
+            <div class="survey-progress-fill" style="width:86%;"></div>
+          </div>
+          <span class="survey-step-label">6 / 7</span>
+        </div>
+        <div class="survey-body">
+          <div class="survey-question">주로 언제 장을 보세요?</div>
+          <div class="survey-sub">장보기 전날 필요한 재료를 알려드릴게요</div>
+          <div class="weekday-row">
+            <div class="weekday-chip">월</div>
+            <div class="weekday-chip selected">화</div>
+            <div class="weekday-chip">수</div>
+            <div class="weekday-chip selected">목</div>
+            <div class="weekday-chip">금</div>
+            <div class="weekday-chip">토</div>
+            <div class="weekday-chip">일</div>
+            <div class="weekday-chip-wide">정해지지 않음</div>
+          </div>
+        </div>
+        <div class="survey-footer">
+          <div class="survey-btn">다음</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

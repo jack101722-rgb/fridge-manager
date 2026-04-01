@@ -151,6 +151,35 @@ export default function MyPageScreen() {
     ]);
   }
 
+  async function handleDeleteAccount() {
+    Alert.alert(
+      '회원 탈퇴',
+      '탈퇴하면 냉장고, 재료, 설정 등 모든 데이터가 영구적으로 삭제돼요. 정말 탈퇴할까요?',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '탈퇴하기', style: 'destructive',
+          onPress: async () => {
+            if (!user) return;
+            try {
+              // 사용자 데이터 삭제 (cascade 설정에 따라 DB에서 자동 삭제될 수 있음)
+              await supabase.from('fridge_members').delete().eq('user_id', user.id);
+              await supabase.from('users').delete().eq('id', user.id);
+              // Auth 계정 삭제
+              await supabase.rpc('delete_user');
+              await supabase.auth.signOut();
+              setUser(null);
+              setFridge(null);
+              router.replace('/login');
+            } catch (e) {
+              Alert.alert('오류', '탈퇴 처리 중 문제가 생겼어요. 잠시 후 다시 시도해주세요.');
+            }
+          },
+        },
+      ]
+    );
+  }
+
   const consumed = ingredients.filter((i) => i.is_consumed && i.consumed_type === 'eaten');
   const discarded = ingredients.filter((i) => i.is_consumed && i.consumed_type === 'discarded');
   const total = ingredients.length;
@@ -439,6 +468,10 @@ export default function MyPageScreen() {
 
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Text style={styles.logoutText}>로그아웃</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.deleteAccountBtn} onPress={handleDeleteAccount}>
+          <Text style={styles.deleteAccountText}>회원 탈퇴</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -736,6 +769,12 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#E5E8EB', alignItems: 'center',
   },
   logoutText: { fontSize: 15, color: '#8B95A1', fontWeight: '600' },
+  deleteAccountBtn: {
+    marginHorizontal: 16, marginTop: 4, marginBottom: 48,
+    paddingVertical: 16, borderRadius: 12,
+    alignItems: 'center',
+  },
+  deleteAccountText: { fontSize: 14, color: '#B0B8C1', fontWeight: '500' },
 });
 
 const listStyles = StyleSheet.create({
