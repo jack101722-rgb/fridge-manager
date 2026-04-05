@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>냉장고 박사 — 사용 가이드</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: #F2F4F6;
+      color: #191F28;
+      padding: 48px 24px 100px;
+    }
+
+    /* 전체 너비 제한 */
+    .container { max-width: 900px; margin: 0 auto; }
+
+    /* 헤더 */
+    .header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    .header .app-icon { font-size: 60px; margin-bottom: 14px; }
+    .header h1 { font-size: 28px; font-weight: 800; color: #191F28; margin-bottom: 8px; }
+    .header p { font-size: 15px; color: #8B95A1; }
+
+    /* 섹션 */
+    .section {
+      margin-bottom: 72px;
+    }
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #3182F6;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+    }
+
+    /* 화면+설명 레이아웃 */
+    .screen-layout {
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+    }
+    .screen-layout.reverse { flex-direction: row-reverse; }
+
+    /* 폰 프레임 (축소) */
+    .phone-wrap { flex-shrink: 0; }
+    .phone {
+      width: 220px;
+      height: 476px;
+      background: #fff;
+      border-radius: 36px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1);
+      position: relative;
+      border: 6px solid #1C1C1E;
+      transform-origin: top left;
+    }
+    .phone-inner {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 설명 패널 */
+    .desc-panel {
+      flex: 1;
+      padding-top: 8px;
+    }
+    .desc-panel h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #191F28;
+      margin-bottom: 12px;
+    }
+    .desc-panel .lead {
+      font-size: 14px;
+      color: #4E5968;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+    .step-list { display: flex; flex-direction: column; gap: 14px; }
+    .step-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #EFF6FF;
+      color: #3182F6;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .step-item p { font-size: 14px; color: #4E5968; line-height: 1.6; }
+    .step-item strong { color: #191F28; }
+
+    .tip-box {
+      background: #EFF6FF;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-top: 18px;
+      font-size: 13px;
+      color: #3182F6;
+      line-height: 1.6;
+    }
+    .tip-box strong { font-weight: 700; }
+
+    .warn-box {
+      background: #FFF8EE;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-top: 18px;
+      font-size: 13px;
+      color: #92400E;
+      line-height: 1.6;
+    }
+
+    /* 배지 */
+    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+    .badge {
+      background: #F2F4F6;
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4E5968;
+    }
+
+    /* 구분선 */
+    .divider { height: 1px; background: #E5E8EB; margin: 56px 0; }
+
+    /* 푸터 */
+    .footer {
+      text-align: center;
+      font-size: 13px;
+      color: #8B95A1;
+      margin-top: 60px;
+      padding-top: 32px;
+      border-top: 1px solid #E5E8EB;
+    }
+
+    /* ── 폰 내부 공통 ── */
+    .status-bar {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px 0;
+      font-size: 8px;
+      font-weight: 600;
+    }
+    .tab-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 48px;
+      background: #fff;
+      border-top: 1px solid #E5E8EB;
+      display: flex;
+      align-items: flex-start;
+      padding-top: 6px;
+    }
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .tab-icon { font-size: 14px; }
+    .tab-label { font-size: 7px; color: #B0B8C1; }
+    .tab-item.active .tab-label { color: #3182F6; }
+
+    /* ── 로그인 ── */
+    .login-screen {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 16px 24px;
+    }
+    .login-top { text-align: center; margin-bottom: 24px; }
+    .login-emoji { font-size: 36px; margin-bottom: 6px; }
+    .login-title { font-size: 18px; font-weight: 700; color: #191F28; margin-bottom: 4px; }
+    .login-sub { font-size: 10px; color: #8B95A1; }
+    .input-label { font-size: 9px; font-weight: 600; color: #4E5968; margin-bottom: 4px; }
+    .input-field {
+      border: 1px solid #E5E8EB;
+      border-radius: 7px;
+      padding: 8px 10px;
+      font-size: 10px;
+      color: #B0B8C1;
+      background: #F9FAFB;
+      margin-bottom: 10px;
+    }
+    .primary-btn {
+      background: #3182F6;
+      border-radius: 7px;
+      padding: 10px;
+      text-align: center;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 4px;
+      margin-bottom: 14px;
+    }
+    .divider-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .divider-line { flex: 1; height: 1px; background: #E5E8EB; }
+    .divider-text { font-size: 9px; color: #8B95A1; }
+    .google-btn {
+      border: 1px solid #E0E0E0;
+      border-radius: 30px;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .google-logo {
+      width: 14px; height: 14px;
+      background: linear-gradient(135deg, #4285F4 25%, #EA4335 25%, #EA4335 50%, #FBBC05 50%, #FBBC05 75%, #34A853 75%);
+      border-radius: 50%;
+      font-size: 7px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700;
+    }
+    .google-btn-text { font-size: 10px; font-weight: 600; color: #3C4043; }
+    .switch-mode { text-align: center; font-size: 9px; color: #3182F6; }
+
+    /* ── 홈(냉장고) ── */
+    .fridge-name-row {
+      padding: 12px 12px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .fridge-name { font-size: 14px; font-weight: 700; color: #191F28; }
+    .fridge-count { font-size: 9px; color: #8B95A1; margin-top: 2px; }
+    .progress-card {
+      margin: 8px 10px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .progress-stage { font-size: 8px; font-weight: 600; color: #3182F6; margin-bottom: 4px; }
+    .progress-bar-bg { height: 4px; background: #EFF6FF; border-radius: 2px; margin-bottom: 5px; }
+    .progress-bar-fill { height: 4px; background: #3182F6; border-radius: 2px; }
+    .progress-hint { font-size: 8px; color: #8B95A1; }
+    .storage-tabs { display: flex; gap: 5px; padding: 0 10px 7px; }
+    .storage-tab {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 8px;
+      font-weight: 600;
+      background: #F2F4F6;
+      color: #6B7684;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .storage-tab.active { background: #EFF6FF; color: #3182F6; }
+    .tab-badge {
+      background: #3182F6; color: #fff;
+      border-radius: 6px; font-size: 7px; font-weight: 700; padding: 1px 4px;
+    }
+    .sort-tabs { display: flex; gap: 5px; padding: 0 10px 7px; }
+    .sort-tab {
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 8px;
+      color: #8B95A1;
+      border: 1px solid #E5E8EB;
+    }
+    .sort-tab.active { background: #191F28; color: #fff; border-color: #191F28; }
+    .ingredient-list { padding: 0 10px; }
+    .ingredient-row {
+      display: flex;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #F2F4F6;
+      gap: 7px;
+    }
+    .ing-emoji { font-size: 16px; width: 22px; text-align: center; }
+    .ing-info { flex: 1; }
+    .ing-name { font-size: 9px; font-weight: 600; color: #191F28; }
+    .ing-qty { font-size: 8px; color: #8B95A1; margin-top: 1px; }
+    .d-day { font-size: 9px; font-weight: 700; }
+    .d-safe { color: #00B493; }
+    .d-warning { color: #F59E0B; }
+    .d-danger { color: #F04452; }
+    .fab {
+      position: absolute;
+      bottom: 58px; right: 12px;
+      width: 34px; height: 34px;
+      background: #3182F6;
+      border-radius: 17px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: white;
+      box-shadow: 0 4px 14px rgba(49,130,246,0.4);
+    }
+
+    /* ── 재료 추가 시트 ── */
+    .add-sheet {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      padding: 14px 14px 54px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+    }
+    .sheet-handle {
+      width: 32px; height: 3px;
+      background: #E5E8EB;
+      border-radius: 2px;
+      margin: 0 auto 12px;
+    }
+    .sheet-title { font-size: 11px; font-weight: 700; color: #191F28; margin-bottom: 12px; text-align: center; }
+    .add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .add-btn {
+      background: #F8F9FA;
+      border-radius: 10px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+    .add-btn .add-icon { font-size: 22px; margin-bottom: 4px; }
+    .add-btn .add-label { font-size: 9px; font-weight: 600; color: #191F28; }
+    .add-btn .add-desc { font-size: 8px; color: #8B95A1; margin-top: 2px; }
+
+    /* ── 메뉴 추천 ── */
+    .screen-header-sm {
+      padding: 12px 12px 7px;
+    }
+    .screen-title-sm { font-size: 14px; font-weight: 700; color: #191F28; }
+    .screen-subtitle-sm { font-size: 9px; color: #8B95A1; margin-top: 2px; }
+    .section-header-sm {
+      display: flex; align-items: center; gap: 5px;
+      padding: 8px 12px;
+    }
+    .section-emoji-sm { font-size: 12px; }
+    .section-title-sm { font-size: 10px; font-weight: 700; color: #191F28; }
+    .menu-scroll-sm { display: flex; gap: 8px; padding: 0 12px 4px; overflow: hidden; }
+    .menu-card-sm {
+      width: 96px; min-width: 96px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .mc-emoji-sm { font-size: 20px; margin-bottom: 4px; }
+    .mc-name-sm { font-size: 9px; font-weight: 700; color: #191F28; margin-bottom: 2px; }
+    .mc-desc-sm { font-size: 8px; color: #8B95A1; line-height: 12px; margin-bottom: 5px; }
+    .mc-meta-sm { display: flex; gap: 5px; }
+    .mc-meta-text-sm { font-size: 7px; color: #B0B8C1; }
+    .divider-section-sm { height: 6px; background: #F2F4F6; margin: 5px 0; }
+    .l2-card-sm {
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 0 12px 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .l2-top-sm { display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-start; }
+    .l2-emoji-sm { font-size: 22px; }
+    .l2-name-sm { font-size: 10px; font-weight: 700; color: #191F28; margin-bottom: 2px; }
+    .l2-desc-sm { font-size: 8px; color: #8B95A1; margin-bottom: 4px; }
+    .l2-ing-sm { border-top: 1px solid #F2F4F6; padding-top: 6px; }
+    .l2-ing-label-sm { font-size: 8px; font-weight: 600; color: #27AE60; }
+    .l2-ing-text-sm { font-size: 8px; color: #4E5968; }
+
+    /* ── 장보기 ── */
+    .shopping-content-sm { padding: 0 10px; padding-bottom: 56px; }
+    .shop-item-sm {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border-radius: 8px;
+      padding: 9px;
+      margin-bottom: 5px;
+      gap: 8px;
+    }
+    .checkbox-sm { width: 16px; height: 16px; border-radius: 8px; border: 1.5px solid #D1D6DB; flex-shrink: 0; }
+    .checkbox-sm.done { background: #3182F6; border-color: #3182F6; display: flex; align-items: center; justify-content: center; color: white; font-size: 8px; font-weight: 700; }
+    .shop-name-sm { font-size: 9px; color: #191F28; font-weight: 500; flex: 1; }
+    .shop-name-sm.done { color: #8B95A1; text-decoration: line-through; }
+    .shop-qty-sm { font-size: 8px; color: #8B95A1; }
+    .shop-source-sm { font-size: 8px; color: #B0B8C1; }
+    .bottom-bar-btn-sm {
+      position: absolute;
+      bottom: 52px; left: 10px; right: 10px;
+      background: #3182F6;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+    }
+
+    /* ── 온보딩 ── */
+    .onboard-slide-sm {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 24px 100px;
+    }
+    .onboard-circle-sm {
+      width: 72px; height: 72px;
+      border-radius: 36px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 22px;
+    }
+    .onboard-emoji-sm { font-size: 34px; }
+    .onboard-title-sm { font-size: 16px; font-weight: 700; color: #111; text-align: center; line-height: 22px; margin-bottom: 10px; }
+    .onboard-desc-sm { font-size: 10px; color: #6B7684; text-align: center; line-height: 16px; }
+    .onboard-bottom-sm {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 12px 16px 28px;
+      background: #fff;
+    }
+    .onboard-dots-sm { display: flex; align-items: center; justify-content: center; gap: 4px; margin-bottom: 10px; }
+    .onboard-dot-sm { height: 5px; border-radius: 3px; background: #D1D5DB; width: 5px; }
+    .onboard-dot-sm.active { background: #3182F6; width: 12px; }
+    .onboard-btn-sm {
+      background: #3182F6; border-radius: 10px;
+      padding: 10px; text-align: center;
+      color: #fff; font-size: 12px; font-weight: 700;
+    }
+
+    @media (max-width: 600px) {
+      .screen-layout, .screen-layout.reverse {
+        flex-direction: column;
+        align-items: center;
+      }
+      .desc-panel { padding-top: 20px; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- 헤더 -->
+  <div class="header">
+    <div class="app-icon">🧑‍⚕️</div>
+    <h1>냉장고 박사 사용 가이드</h1>
+    <p>처음 오신 분도 5분이면 모든 기능을 쓸 수 있어요</p>
+  </div>
+
+  <!-- ① 로그인 -->
+  <div class="section">
+    <div class="section-label">STEP 1 &nbsp; 시작하기</div>
+    <div class="screen-layout">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="status-bar" style="color:#191F28;"><span>9:41</span><span>●●● 📶 🔋</span></div>
+            <div class="login-screen">
+              <div class="login-top">
+                <div class="login-emoji">🧊</div>
+                <div class="login-title">냉장고 박사</div>
+                <div class="login-sub">다시 오셨군요! 로그인해주세요.</div>
+              </div>
+              <div class="input-label">이메일</div>
+              <div class="input-field">example@email.com</div>
+              <div class="input-label">비밀번호</div>
+              <div class="input-field">••••••••</div>
+              <div class="primary-btn">로그인</div>
+              <div class="divider-row">
+                <div class="divider-line"></div>
+                <div class="divider-text">또는</div>
+                <div class="divider-line"></div>
+              </div>
+              <div class="google-btn">
+                <div class="google-logo">G</div>
+                <div class="google-btn-text">Google로 시작하기</div>
+              </div>
+              <div class="switch-mode">아직 계정이 없어요 → 회원가입</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="desc-panel">
+        <h2>회원가입 & 로그인</h2>
+        <p class="lead">앱을 처음 열면 로그인 화면이 나와요. 두 가지 방법 중 편한 걸 선택하세요.</p>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <p><strong>이메일 회원가입</strong> — 이메일 주소와 비밀번호를 입력해서 가입해요. 아래 "아직 계정이 없어요" 를 눌러 시작하세요.</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <p><strong>Google 로그인</strong> — "Google로 시작하기" 버튼 하나로 바로 시작할 수 있어요. 구글 계정이 있다면 가장 빠른 방법이에요.</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <p>가입 후 <strong>짧은 취향 설문</strong>이 나와요 — 가족 수, 선호 음식 등을 입력하면 AI 추천이 훨씬 정확해져요.</p>
+          </div>
+        </div>
+        <div class="tip-box"><strong>💡</strong> 설문은 나중에 마이페이지에서도 수정할 수 있어요.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ② 홈 냉장고 -->
+  <div class="section">
+    <div class="section-label">STEP 2 &nbsp; 냉장고 홈</div>
+    <div class="screen-layout reverse">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="phone-inner" style="background:#F9FAFB;">
+            <div class="status-bar" style="color:#191F28;"><span>9:41</span><span>●●● 📶 🔋</span></div>
+            <div class="fridge-name-row">
+              <div>
+                <div class="fridge-name">우리 냉장고</div>
+                <div class="fridge-count">전체 12개</div>
+              </div>
+            </div>
+            <div class="progress-card">
+              <div class="progress-stage">성장 단계 &nbsp; 12개 등록됨</div>
+              <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:60%"></div></div>
+              <div class="progress-hint">재료 20개를 채우면 절약 리포트가 열려요!</div>
+            </div>
+            <div class="storage-tabs">
+              <div class="storage-tab active">❄️ 냉장 <span class="tab-badge">8</span></div>
+              <div class="storage-tab">🧊 냉동 <span style="background:#F2F4F6;color:#6B7684;border-radius:6px;font-size:7px;font-weight:700;padding:1px 4px;">2</span></div>
+              <div class="storage-tab">🌡️ 실온 <span style="background:#F2F4F6;color:#6B7684;border-radius:6px;font-size:7px;font-weight:700;padding:1px 4px;">2</span></div>
+            </div>
+            <div class="sort-tabs">
+              <div class="sort-tab">최근 등록</div>
+              <div class="sort-tab active">D-day순</div>
+              <div class="sort-tab">이름순</div>
+            </div>
+            <div class="ingredient-list">
+              <div class="ingredient-row">
+                <div class="ing-emoji">🍅</div>
+                <div class="ing-info"><div class="ing-name">방울토마토</div><div class="ing-qty">1팩</div></div>
+                <div class="d-day d-warning">D-3</div>
+              </div>
+              <div class="ingredient-row">
+                <div class="ing-emoji">🥛</div>
+                <div class="ing-info"><div class="ing-name">우유</div><div class="ing-qty">1개</div></div>
+                <div class="d-day d-warning">D-5</div>
+              </div>
+              <div class="ingredient-row">
+                <div class="ing-emoji">🌶️</div>
+                <div class="ing-info"><div class="ing-name">청양고추</div><div class="ing-qty">5개</div></div>
+                <div class="d-day d-safe">D-9</div>
+              </div>
+              <div class="ingredient-row">
+                <div class="ing-emoji">🧄</div>
+                <div class="ing-info"><div class="ing-name">다진마늘</div><div class="ing-qty">1개</div></div>
+                <div class="d-day d-safe">D-13</div>
+              </div>
+              <div class="ingredient-row">
+                <div class="ing-emoji">🌿</div>
+                <div class="ing-info"><div class="ing-name">대파</div><div class="ing-qty">1묶음</div></div>
+                <div class="d-day d-safe">D-13</div>
+              </div>
+            </div>
+            <div class="fab">+</div>
+            <div class="tab-bar">
+              <div class="tab-item active"><div class="tab-icon">🏠</div><div class="tab-label" style="color:#3182F6;">냉장고</div></div>
+              <div class="tab-item"><div class="tab-icon">🍳</div><div class="tab-label">메뉴</div></div>
+              <div class="tab-item"><div class="tab-icon">🛒</div><div class="tab-label">장보기</div></div>
+              <div class="tab-item"><div class="tab-icon">👤</div><div class="tab-label">마이</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="desc-panel">
+        <h2>냉장고 홈 화면</h2>
+        <p class="lead">로그인하면 바로 이 화면이 나와요. 냉장고에 있는 재료를 한눈에 볼 수 있어요.</p>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">A</div>
+            <p><strong>진행도 바</strong> — 재료를 많이 등록할수록 새 기능이 잠금 해제돼요. (5개: 메뉴 추천 / 10개: 장보기 자동 생성 / 20개: 절약 리포트)</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">B</div>
+            <p><strong>냉장 / 냉동 / 실온 탭</strong> — 보관 위치별로 재료를 분류해서 볼 수 있어요.</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">C</div>
+            <p><strong>D-Day 색상</strong> — <span style="color:#00B493;font-weight:700;">초록</span>(여유) / <span style="color:#F59E0B;font-weight:700;">노랑</span>(7일 이내) / <span style="color:#F04452;font-weight:700;">빨강</span>(오늘·기한 초과)</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">D</div>
+            <p>오른쪽 아래 파란 <strong>＋ 버튼</strong>을 누르면 재료를 추가할 수 있어요.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ③ 재료 추가 -->
+  <div class="section">
+    <div class="section-label">STEP 3 &nbsp; 재료 등록하기</div>
+    <div class="screen-layout">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="phone-inner" style="background:#F9FAFB;">
+            <div class="status-bar" style="color:#191F28;"><span>9:41</span><span>●●● 📶 🔋</span></div>
+            <div class="fridge-name-row">
+              <div>
+                <div class="fridge-name">우리 냉장고</div>
+                <div class="fridge-count">전체 12개</div>
+              </div>
+            </div>
+            <div class="ingredient-list" style="padding-top:8px;">
+              <div class="ingredient-row">
+                <div class="ing-emoji">🍅</div>
+                <div class="ing-info"><div class="ing-name">방울토마토</div><div class="ing-qty">1팩</div></div>
+                <div class="d-day d-warning">D-3</div>
+              </div>
+              <div class="ingredient-row">
+                <div class="ing-emoji">🥛</div>
+                <div class="ing-info"><div class="ing-name">우유</div><div class="ing-qty">1개</div></div>
+                <div class="d-day d-warning">D-5</div>
+              </div>
+            </div>
+            <!-- 추가 시트 -->
+            <div class="add-sheet">
+              <div class="sheet-handle"></div>
+              <div class="sheet-title">재료 추가 방법 선택</div>
+              <div class="add-grid">
+                <div class="add-btn">
+                  <div class="add-icon">✏️</div>
+                  <div class="add-label">직접 입력</div>
+                  <div class="add-desc">이름·기한 직접 입력</div>
+                </div>
+                <div class="add-btn">
+                  <div class="add-icon">📷</div>
+                  <div class="add-label">카메라 촬영</div>
+                  <div class="add-desc">사진으로 AI 인식</div>
+                </div>
+                <div class="add-btn">
+                  <div class="add-icon">🧾</div>
+                  <div class="add-label">영수증 스캔</div>
+                  <div class="add-desc">영수증 한 번에 등록</div>
+                </div>
+                <div class="add-btn">
+                  <div class="add-icon">📦</div>
+                  <div class="add-label">바코드 스캔</div>
+                  <div class="add-desc">바코드로 상품 정보</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="desc-panel">
+        <h2>재료 등록하기</h2>
+        <p class="lead">+ 버튼을 누르면 이 시트가 올라와요. 5가지 방법 중 편한 걸 골라 등록하세요.</p>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <p><strong>✏️ 직접 입력</strong> — 재료 이름, 카테고리, 수량, 소비기한을 직접 써요. 기한을 모르면 비워도 AI가 자동 예측해줘요.</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <p><strong>📷 카메라 촬영</strong> — 재료 사진을 찍으면 AI가 자동으로 재료 이름을 인식해요.</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <p><strong>🧾 영수증 스캔</strong> — 마트 영수증을 찍으면 구매 항목을 한 번에 등록해줘요. 여러 개를 한꺼번에 넣을 때 최고예요.</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <p><strong>📦 바코드 스캔</strong> — 제품 뒷면 바코드를 스캔하면 상품 정보를 자동으로 불러와요.</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">5</div>
+            <p><strong>🗂️ 패키지 선택</strong> — 찌개 재료, 샐러드 재료처럼 자주 쓰는 재료 묶음을 한 번에 등록해요.</p>
+          </div>
+        </div>
+        <div class="tip-box"><strong>💡</strong> 재료를 탭하면 수량 수정, 부분 소비, 삭제가 가능해요.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ④ 메뉴 추천 -->
+  <div class="section">
+    <div class="section-label">STEP 4 &nbsp; AI 메뉴 추천</div>
+    <div class="screen-layout reverse">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="phone-inner" style="background:#F9FAFB;">
+            <div class="status-bar" style="color:#191F28;"><span>9:41</span><span>●●● 📶 🔋</span></div>
+            <div class="screen-header-sm">
+              <div class="screen-title-sm">메뉴 추천</div>
+              <div class="screen-subtitle-sm">냉장고 재료로 만들 수 있는 메뉴예요</div>
+            </div>
+            <div class="section-header-sm">
+              <span class="section-emoji-sm">🍚</span>
+              <span class="section-title-sm">한식 추천</span>
+            </div>
+            <div class="menu-scroll-sm">
+              <div class="menu-card-sm">
+                <div class="mc-emoji-sm">🍲</div>
+                <div class="mc-name-sm">된장찌개</div>
+                <div class="mc-desc-sm">두부와 호박으로 만드는 구수한 된장찌개</div>
+                <div class="mc-meta-sm"><span class="mc-meta-text-sm">⏱ 20분</span><span class="mc-meta-text-sm"> 쉬움</span></div>
+              </div>
+              <div class="menu-card-sm">
+                <div class="mc-emoji-sm">🍳</div>
+                <div class="mc-name-sm">계란볶음밥</div>
+                <div class="mc-desc-sm">냉장고 속 자투리 재료로 만드는 볶음밥</div>
+                <div class="mc-meta-sm"><span class="mc-meta-text-sm">⏱ 10분</span><span class="mc-meta-text-sm"> 쉬움</span></div>
+              </div>
+            </div>
+            <div class="divider-section-sm"></div>
+            <div class="section-header-sm">
+              <span class="section-emoji-sm">✨</span>
+              <div>
+                <div class="section-title-sm">내 냉장고 맞춤 추천</div>
+                <div style="font-size:7px;color:#3182F6;">재료 12개 기준</div>
+              </div>
+            </div>
+            <div class="l2-card-sm">
+              <div class="l2-top-sm">
+                <div class="l2-emoji-sm">🥘</div>
+                <div>
+                  <div class="l2-name-sm">청양고추 제육볶음</div>
+                  <div class="l2-desc-sm">지금 냉장고 재료로 바로 만들 수 있어요</div>
+                </div>
+              </div>
+              <div class="l2-ing-sm">
+                <span class="l2-ing-label-sm">✅ 보유 재료 </span>
+                <span class="l2-ing-text-sm">돼지고기, 청양고추, 대파, 마늘, 간장...</span>
+              </div>
+            </div>
+            <div class="tab-bar">
+              <div class="tab-item"><div class="tab-icon">🏠</div><div class="tab-label">냉장고</div></div>
+              <div class="tab-item active"><div class="tab-icon">🍳</div><div class="tab-label" style="color:#3182F6;">메뉴</div></div>
+              <div class="tab-item"><div class="tab-icon">🛒</div><div class="tab-label">장보기</div></div>
+              <div class="tab-item"><div class="tab-icon">👤</div><div class="tab-label">마이</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="desc-panel">
+        <h2>AI 메뉴 추천</h2>
+        <p class="lead">하단 탭에서 🍳 메뉴를 누르면 열려요. 재료 5개 이상 등록하면 활성화돼요.</p>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">A</div>
+            <p><strong>카테고리별 추천</strong> — 계절 추천 / 10분 간단 요리 / 한식 / 양식 중 원하는 걸 골라볼 수 있어요.</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">B</div>
+            <p><strong>내 냉장고 맞춤 추천</strong> — 지금 내 냉장고에 있는 재료를 기반으로 AI가 실시간으로 메뉴를 골라줘요.</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">C</div>
+            <p>메뉴를 탭하면 <strong>상세 레시피</strong>가 펼쳐져요 — 재료 목록, 조리 순서, 조리 팁까지 AI가 맞춤으로 생성해줘요.</p>
+          </div>
+        </div>
+        <div class="tip-box"><strong>💡</strong> 메뉴 카드에 "✅ 보유" 표시가 있으면 지금 바로 만들 수 있는 재료가 있다는 뜻이에요.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ⑤ 장보기 -->
+  <div class="section">
+    <div class="section-label">STEP 5 &nbsp; 장보기 목록</div>
+    <div class="screen-layout">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="phone-inner" style="background:#F9FAFB;">
+            <div class="status-bar" style="color:#191F28;"><span>9:41</span><span>●●● 📶 🔋</span></div>
+            <div class="screen-header-sm">
+              <div class="screen-title-sm">장보기 목록</div>
+              <div class="screen-subtitle-sm">3개 남았어요</div>
+            </div>
+            <div class="shopping-content-sm">
+              <div class="shop-item-sm">
+                <div class="checkbox-sm"></div>
+                <div style="flex:1">
+                  <div class="shop-name-sm">스파게티 면</div>
+                  <div class="shop-source-sm">토마토 스파게티 레시피</div>
+                </div>
+                <div class="shop-qty-sm">200g</div>
+              </div>
+              <div class="shop-item-sm">
+                <div class="checkbox-sm"></div>
+                <div style="flex:1">
+                  <div class="shop-name-sm">토마토소스</div>
+                  <div class="shop-source-sm">직접 추가</div>
+                </div>
+                <div class="shop-qty-sm">1캔</div>
+              </div>
+              <div class="shop-item-sm">
+                <div class="checkbox-sm"></div>
+                <div style="flex:1">
+                  <div class="shop-name-sm">생크림</div>
+                  <div class="shop-source-sm">크림파스타 레시피</div>
+                </div>
+                <div class="shop-qty-sm">200ml</div>
+              </div>
+              <div class="shop-item-sm">
+                <div class="checkbox-sm done">✓</div>
+                <div style="flex:1"><div class="shop-name-sm done">올리브유</div></div>
+                <div class="shop-qty-sm">1병</div>
+              </div>
+              <div class="shop-item-sm">
+                <div class="checkbox-sm done">✓</div>
+                <div style="flex:1"><div class="shop-name-sm done">마늘</div></div>
+                <div class="shop-qty-sm">1통</div>
+              </div>
+            </div>
+            <div class="bottom-bar-btn-sm">냉장고에 추가하기 (2개)</div>
+            <div class="tab-bar">
+              <div class="tab-item"><div class="tab-icon">🏠</div><div class="tab-label">냉장고</div></div>
+              <div class="tab-item"><div class="tab-icon">🍳</div><div class="tab-label">메뉴</div></div>
+              <div class="tab-item active"><div class="tab-icon">🛒</div><div class="tab-label" style="color:#3182F6;">장보기</div></div>
+              <div class="tab-item"><div class="tab-icon">👤</div><div class="tab-label">마이</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="desc-panel">
+        <h2>장보기 목록</h2>
+        <p class="lead">하단 탭에서 🛒 장보기를 눌러요. 마트에 가기 전 목록을 만들고, 사고 나면 바로 냉장고에 넣을 수 있어요.</p>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <p><strong>항목 추가</strong> — 살 재료를 직접 입력하거나, AI가 메뉴 레시피 기반으로 자동으로 추가해줘요.</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <p><strong>구매 체크</strong> — 마트에서 담을 때마다 동그라미를 탭해서 체크하세요. 완료된 항목은 아래로 내려가요.</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <p>하단 <strong>"냉장고에 추가하기"</strong> 버튼을 누르면 — 구매 완료 항목이 한 번에 냉장고로 들어가요. AI가 소비기한 등 정보를 자동으로 채워줘요.</p>
+          </div>
+        </div>
+        <div class="tip-box"><strong>💡</strong> 장보기 항목 옆에 출처(레시피명)가 표시돼요. 어떤 요리 때문에 사야 하는지 마트에서 바로 확인할 수 있어요.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ⑥ 온보딩 -->
+  <div class="section">
+    <div class="section-label">참고 &nbsp; 처음 가입 시 온보딩</div>
+    <div class="screen-layout reverse">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="phone-inner" style="background:#EEF4FF;">
+            <div class="status-bar" style="color:#191F28;"><span>9:41</span><span>●●● 📶 🔋</span></div>
+            <div style="position:absolute;top:36px;right:16px;font-size:9px;color:#8B95A1;">건너뛰기</div>
+            <div class="onboard-slide-sm">
+              <div class="onboard-circle-sm" style="background:rgba(49,130,246,0.13);">
+                <span class="onboard-emoji-sm">🧊</span>
+              </div>
+              <div class="onboard-title-sm">냉장고 박사에<br>오신 걸 환영해요!</div>
+              <div class="onboard-desc-sm">냉장고 속 재료를 스마트하게 관리하고<br>음식 낭비를 줄여보세요</div>
+            </div>
+            <div class="onboard-bottom-sm">
+              <div class="onboard-dots-sm">
+                <div class="onboard-dot-sm active"></div>
+                <div class="onboard-dot-sm"></div>
+                <div class="onboard-dot-sm"></div>
+                <div class="onboard-dot-sm"></div>
+              </div>
+              <div class="onboard-btn-sm">다음</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="desc-panel">
+        <h2>첫 가입 온보딩</h2>
+        <p class="lead">처음 가입하면 앱 소개 슬라이드가 4장 나와요. "다음"을 눌러 넘기거나 오른쪽 위 "건너뛰기"를 눌러 바로 시작할 수 있어요.</p>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <p>🧊 냉장고 박사 소개</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <p>📅 소비기한 관리 방법 소개</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <p>🛒 장보기 자동화 소개</p>
+          </div>
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <p>🍳 AI 메뉴 추천 소개 → "시작하기" 버튼으로 앱 진입</p>
+          </div>
+        </div>
+        <div class="warn-box">📢 온보딩 이후 <strong>알림 권한 요청</strong>이 나와요. "허용"을 눌러야 소비기한 알림을 받을 수 있어요!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <div class="footer">
+    <p>냉장고 박사 — 비공개 테스트 버전</p>
+    <p style="margin-top:6px;">사용 중 문제가 생기면 초대를 보내준 분께 직접 연락해 주세요. 소중한 피드백 감사해요!</p>
+  </div>
+
+</div>
+</body>
+</html>
