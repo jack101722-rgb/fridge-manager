@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
 import { Ingredient } from '../types';
 
@@ -249,4 +250,56 @@ export async function generatePersonalizedMenus(
   const jsonMatch = text.match(/\[[\s\S]*\]/);
   if (!jsonMatch) throw new Error('맞춤 메뉴 생성 실패');
   return JSON.parse(jsonMatch[0]) as PersonalizedMenu[];
+}
+
+// ─── 맞춤 메뉴 로컬 캐시 (오늘 날짜 + 재료 수 기준) ─────
+
+const PERSONALIZED_CACHE_KEY = 'personalized_menus_cache';
+
+interface PersonalizedMenuCache {
+  menus: PersonalizedMenu[];
+  date: string;       // 'YYYY-MM-DD'
+  ingredientCount: number;
+}
+
+async function loadPersonalizedCache(ingredientCount: number): Promise<PersonalizedMenu[] | null> {
+  try {
+    const raw = await AsyncStorage.getItem(PERSONALIZED_CACHE_KEY);
+    if (!raw) return null;
+    const cache: PersonalizedMenuCache = JSON.parse(raw);
+    const today = new Date().toISOString().split('T')[0];
+    if (cache.date === today && cache.ingredientCount === ingredientCount) {
+      return cache.menus;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function savePersonalizedCache(menus: PersonalizedMenu[], ingredientCount: number): Promise<void> {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const cache: PersonalizedMenuCache = { menus, date: today, ingredientCount };
+    await AsyncStorage.setItem(PERSONALIZED_CACHE_KEY, JSON.stringify(cache));
+  } catch {}
+}
+
+// 캐시 확인 → 없으면 Claude 생성 → 결과 저장
+export async function getOrGeneratePersonalizedMenus(
+  ingredients: Ingredient[],
+  cuisinePrefs: string[],
+  dietMode: string,
+  forceRefresh = false,
+): Promise<PersonalizedMenu[]> {
+  const activeCount = ingredients.filter((i) => !i.is_consumed).length;
+
+  if (!forceRefresh) {
+    const cached = await loadPersonalizedCache(activeCount);
+    if (cached) return cached;
+  }
+
+  const menus = await generatePersonalizedMenus(ingredients, cuisinePrefs, dietMode);
+  await savePersonalizedCache(menus, activeCount);
+  return menus;
 }

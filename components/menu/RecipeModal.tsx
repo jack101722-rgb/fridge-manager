@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -46,6 +46,24 @@ export default function RecipeModal({ menu, onClose }: Props) {
 
   const [blogs, setBlogs] = useState<NaverBlogResult[]>([]);
   const [loadingBlogs, setLoadingBlogs] = useState(false);
+
+  // 레시피 로딩 메시지 순환
+  const RECIPE_MSGS = [
+    '레시피를 검색하는 중...',
+    '재료 목록을 정리하는 중...',
+    '조리 순서를 확인하는 중...',
+    '거의 다 됐어요! 🍽',
+  ];
+  const [recipeLoadingMsg, setRecipeLoadingMsg] = useState(RECIPE_MSGS[0]);
+  const recipeMsgIdx = useRef(0);
+  useEffect(() => {
+    if (!loadingRecipe) { recipeMsgIdx.current = 0; setRecipeLoadingMsg(RECIPE_MSGS[0]); return; }
+    const timer = setInterval(() => {
+      recipeMsgIdx.current = (recipeMsgIdx.current + 1) % RECIPE_MSGS.length;
+      setRecipeLoadingMsg(RECIPE_MSGS[recipeMsgIdx.current]);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [loadingRecipe]);
 
   const [addingItems, setAddingItems] = useState<Record<string, boolean>>({});
   const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
@@ -283,7 +301,7 @@ export default function RecipeModal({ menu, onClose }: Props) {
             {loadingRecipe ? (
               <View style={styles.loadingBlock}>
                 <ActivityIndicator color="#3182F6" />
-                <Text style={styles.loadingText}>레시피 불러오는 중...</Text>
+                <Text style={styles.loadingText}>{recipeLoadingMsg}</Text>
               </View>
             ) : recipeError ? (
               <View style={styles.errorBlock}>

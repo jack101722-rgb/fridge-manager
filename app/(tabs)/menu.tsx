@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -14,8 +14,8 @@ import {
   CachedMenu,
   MenuCategory,
   PersonalizedMenu,
-  generatePersonalizedMenus,
   getOrCreateCachedMenus,
+  getOrGeneratePersonalizedMenus,
 } from '../../lib/menuApi';
 
 // ─── 상수 ────────────────────────────────────────────────
@@ -176,6 +176,25 @@ export default function MenuScreen() {
 
   const [selectedMenu, setSelectedMenu] = useState<SelectedMenu | null>(null);
 
+  // L2 로딩 메시지 순환
+  const L2_MSGS = [
+    'AI가 냉장고 재료를 분석하는 중...',
+    '유통기한 임박 재료를 확인하는 중...',
+    '맞춤 레시피 조합을 계산하는 중...',
+    '맛있는 메뉴를 찾는 중...',
+    '거의 다 됐어요! 🍳',
+  ];
+  const [loadingMsgL2, setLoadingMsgL2] = useState(L2_MSGS[0]);
+  const l2MsgIdx = useRef(0);
+  useEffect(() => {
+    if (!loadingL2) { l2MsgIdx.current = 0; setLoadingMsgL2(L2_MSGS[0]); return; }
+    const timer = setInterval(() => {
+      l2MsgIdx.current = (l2MsgIdx.current + 1) % L2_MSGS.length;
+      setLoadingMsgL2(L2_MSGS[l2MsgIdx.current]);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [loadingL2]);
+
   // 레이어1 로드 (진입 시 1회)
   useEffect(() => {
     setLoadingL1(true);
@@ -191,7 +210,7 @@ export default function MenuScreen() {
     if (!isUnlocked || layer2.length > 0) return;
     setLoadingL2(true);
     setErrorL2('');
-    generatePersonalizedMenus(
+    getOrGeneratePersonalizedMenus(
       ingredients.filter((i) => !i.is_consumed),
       user?.cuisine_prefs ?? [],
       user?.diet_mode ?? 'none',
@@ -276,7 +295,7 @@ export default function MenuScreen() {
             {loadingL2 ? (
               <View style={styles.loadingBlock}>
                 <ActivityIndicator color="#3182F6" />
-                <Text style={styles.loadingText}>AI가 맞춤 메뉴를 분석하는 중...</Text>
+                <Text style={styles.loadingText}>{loadingMsgL2}</Text>
               </View>
             ) : errorL2 ? (
               <View style={styles.errorBlock}>
@@ -285,7 +304,7 @@ export default function MenuScreen() {
                   onPress={() => {
                     setLoadingL2(true);
                     setErrorL2('');
-                    generatePersonalizedMenus(
+                    getOrGeneratePersonalizedMenus(
                       ingredients.filter((i) => !i.is_consumed),
                       user?.cuisine_prefs ?? [],
                       user?.diet_mode ?? 'none',
@@ -313,10 +332,11 @@ export default function MenuScreen() {
                     setLayer2([]);
                     setLoadingL2(true);
                     setErrorL2('');
-                    generatePersonalizedMenus(
+                    getOrGeneratePersonalizedMenus(
                       ingredients.filter((i) => !i.is_consumed),
                       user?.cuisine_prefs ?? [],
                       user?.diet_mode ?? 'none',
+                      true,
                     )
                       .then(setLayer2)
                       .catch(() => setErrorL2('맞춤 메뉴 생성에 실패했어요.'))

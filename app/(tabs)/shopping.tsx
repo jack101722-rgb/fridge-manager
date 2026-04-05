@@ -117,6 +117,7 @@ export default function ShoppingScreen() {
         <FlatList
           data={[...pending, ...purchased]}
           keyExtractor={(item) => item.id}
+          style={{ flex: 1, backgroundColor: '#F9FAFB' }}
           contentContainerStyle={{ padding: 16, paddingBottom: purchased.length > 0 ? 100 : 16 }}
           renderItem={({ item }) => (
             <TouchableOpacity

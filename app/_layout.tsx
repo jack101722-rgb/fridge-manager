@@ -111,7 +111,8 @@ export default function RootLayout() {
           if (event === 'SIGNED_IN') {
             router.replace('/');
           }
-        } else {
+        } else if (event === 'SIGNED_OUT') {
+          // 명시적 로그아웃 시에만 초기화 (INITIAL_SESSION null은 getSession()이 처리)
           setUser(null);
           setFridge(null);
         }
